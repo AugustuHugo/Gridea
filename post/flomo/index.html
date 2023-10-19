@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>flomo数据导入到memos项目 | 飞光</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.augustu.top/favicon.ico?v=1697725872917">
+<link rel="stylesheet" href="https://blog.augustu.top/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+
+  
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="memos项目是一个非常好的替代浮墨的项目，但数据导出导入不够方便，我参考了项目的discussions，做了一个统合
+
+memos项目是一个非常好的替代浮墨的项目，但数据导出导入不够方便，我参考了项目的discussions，做了一个统合..." />
+    <meta name="keywords" content="" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://blog.augustu.top">
+        <img src="https://blog.augustu.top/images/avatar.png?v=1697725872917" class="site-logo">
+        <h1 class="site-title">飞光</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+          <a class="social-link" href="https://github.com/AugustuXue" target="_blank">
+            <i class="fab fa-github"></i>
+          </a>
+        
+      
+        
+      
+        
+      
+        
+          <a class="social-link" href="https://www.zhihu.com/people/ming-wu-41-24" target="_blank">
+            <i class="fab fa-zhihu"></i>
+          </a>
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      吾不识青天高，黄地厚<br>
+唯见月寒日暖，来煎人寿
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://blog.augustu.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">flomo数据导入到memos项目</h2>
+            <div class="post-date">2022-11-03</div>
+            
+              <div class="feature-container" style="background-image: url('https://img-blog.csdnimg.cn/img_convert/6758be612e06aa12974bb78641f54939.png')">
+              </div>
+            
+            <div class="post-content" v-pre>
+              <p>memos项目是一个非常好的替代浮墨的项目，但数据导出导入不够方便，我参考了项目的discussions，做了一个统合</p>
+<!-- more -->
+<p>memos项目是一个非常好的替代浮墨的项目，但数据导出导入不够方便，我参考了项目的discussions，做了一个统合</p>
+<h2 id="1-flomo数据导出">1、flomo数据导出</h2>
+<figure data-type="image" tabindex="1"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/202211031510593.png?x-oss-process=style/zip" alt="image-20221103151032494" loading="lazy"></figure>
+<figure data-type="image" tabindex="2"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/202211031511189.png?x-oss-process=style/zip" alt="image-20221103151110119" loading="lazy"></figure>
+<p>等待一定时间后在通知处点击链接下载</p>
+<figure data-type="image" tabindex="3"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/202211031512921.png?x-oss-process=style/zip" alt="image-20221103151212881" loading="lazy"></figure>
+<h2 id="转换为json文件">转换为json文件</h2>
+<p>通过<a href="https://github.com/Alwayfeels/flomoParse">flomoParse</a>项目，<a href="https://codeload.github.com/Alwayfeels/flomoParse/zip/refs/heads/master">下载该文件</a>后，</p>
+<ol>
+<li>npm install 安装依赖</li>
+<li>在根目录下创建一个文件夹，命名为flomoResource</li>
+<li>将flomo 导出的 html 数据全部放入 flomoResource 文件夹中</li>
+<li>运行 node index.js</li>
+</ol>
+<h2 id="转换为csv文件">转换为csv文件</h2>
+<p>代码如下</p>
+<pre><code class="language-python">
+import json, csv, time
+from datetime import datetime
+def time2ts(x):
+    return int(datetime.strptime(x, &quot;%Y-%m-%d %H:%M:%S&quot;).timestamp())
+res = [[&quot;id&quot;,&quot;creator_id&quot;,&quot;created_ts&quot;,&quot;updated_ts&quot;,&quot;row_status&quot;,&quot;content&quot;,&quot;visibility&quot;]]
+for idx,i in enumerate(json.load(open(&quot;myMemos.json&quot;,encoding=&quot;UTF-8&quot;))):
+    contents = i[&quot;content&quot;]
+    if not contents:
+        continue
+    c = [contents[0]]
+    oldline = contents[0]
+    for line in contents:
+        if line==oldline:
+            continue
+        oldline = line
+        c.append(line)
+    res.append([1005+idx, 101, time2ts(i[&quot;time&quot;]), time2ts(i[&quot;time&quot;]), &quot;NORMAL&quot;, &quot;\n&quot;.join(c)+&quot; &quot;, &quot;PRIVATE&quot;])
+csv.writer(open(&quot;out.csv&quot;, &quot;w&quot;,encoding=&quot;UTF-8&quot;)).writerows(res)
+</code></pre>
+<p>新建.py文件，将代码加入后将第二步得到的json文件放到同一目录下，运行该python文件（可以直接在微软商店下载Python后在cmd命令行中打开该目录后使用 python 文件名.py 命令运行）</p>
+<p>如有ide可以直接使用ide运行</p>
+<h2 id="转换db">转换db</h2>
+<h3 id="下载原有数据库">下载原有数据库</h3>
+<p>打开服务器中目录，具体目录可查找docker-compose文件</p>
+<figure data-type="image" tabindex="4"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/202211031521811.png?x-oss-process=style/zip" alt="image-20221103152101764" loading="lazy"></figure>
+<p>打开.memos，下载memos_prod.db文件</p>
+<h3 id="使用navicat打开并替换">使用navicat打开并替换</h3>
+<p>如没有navicat，可下载</p>
+<p><a href="https://www.ghxi.com/navicat16.html">Navicat Premium(数据库管理) v16.0.6.0 绿色版</a></p>
+<p>下载好后打开navicat.exe，创建sqllite链接后将db文件拖入边框左侧打开</p>
+<figure data-type="image" tabindex="5"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/202211031525524.png?x-oss-process=style/zip" alt="image-20221103152523451" loading="lazy"></figure>
+<p>点击导入按钮，选择csv文件，添加上一步中的csv文件，一直点击下一步后到导入模式处，选择更新</p>
+<figure data-type="image" tabindex="6"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/202211031527686.png?x-oss-process=style/zip" alt="image-20221103152710632" loading="lazy"></figure>
+<p>继续下一步，最后点击开始</p>
+<p>如果没有错误，那么关闭以后回到主界面，点击memo表，右键后选择最后一项，刷新</p>
+<figure data-type="image" tabindex="7"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/202211031528571.png?x-oss-process=style/zip" alt="image-20221103152829527" loading="lazy"></figure>
+<p>成功后关闭软件，将现有的memos_prod.db替换掉服务器中的同名文件</p>
+<p>然后 docker-compose restart</p>
+<figure data-type="image" tabindex="8"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/202211031530065.png?x-oss-process=style/zip" alt="image-20221103153000031" loading="lazy"></figure>
+<p>成功！</p>
+<h3 id="声明">声明</h3>
+<pre><code>涉及代码均来自memos项目discussion及github，非本人所作
+</code></pre>
+
+            </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://blog.augustu.top/post/shun1730-review/">
+                  <h3 class="post-title">
+                    《新顺1730》简评
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+              
+                <div id="gitalk-container" data-aos="fade-in"></div>
+              
+
+              
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'ff3b204017fefc20c2a7',
+        clientSecret: '325269c895db78df64762d2bda6b530cd3e7e6f3',
+        repo: 'gitalk',
+        owner: 'AugustuHugo',
+        admin: ['AugustuHugo'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+
+  </body>
+</html>

