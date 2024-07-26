@@ -1,0 +1,236 @@
+<html>
+<head>
+    <meta charset="utf-8" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<title>vmware 双机联调 不能下端点 debug 问题 | 飞光</title>
+
+<link rel="shortcut icon" href="https://blog.augustu.top/favicon.ico?v=1721984284030">
+
+<link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://blog.augustu.top/styles/main.css">
+<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/css/bootstrap.min.css"> -->
+
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets/highlight.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/highlight.js/9.12.0/languages/dockerfile.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/highlight.js/9.12.0/languages//dart.min.js"></script>
+
+<!-- <script src="https://cdn.jsdelivr.net/npm/moment@2.27.0/moment.min.js"></script> -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script> -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script> -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/js/bootstrap.min.js"></script> -->
+<!-- DEMO JS -->
+<!--<script src="media/scripts/index.js"></script>-->
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-9LQ8M10P2E"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+        dataLayer.push(arguments);
+    }
+
+    gtag('js', new Date());
+    gtag('config', 'G-9LQ8M10P2E');
+</script>
+
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.css">
+    
+</head>
+<body>
+<div class="main gt-bg-theme-color-first">
+    <nav class="navbar navbar-expand-lg">
+    <a class="navbar-brand" href="/">
+        <img class="user-avatar" src="/images/avatar.png" alt="头像">
+        <div class="site-name gt-c-content-color-first">
+            飞光
+        </div>
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation" id="changeNavbar">
+        <i class="fas fa-bars gt-c-content-color-first" style="font-size: 18px"></i>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <div class="navbar-nav mr-auto" style="text-align: center">
+            
+            <div class="nav-item">
+                
+                <a href="/" class="menu gt-a-link">
+                    首页
+                </a>
+                
+            </div>
+            
+            <div class="nav-item">
+                
+                <a href="/archives" class="menu gt-a-link">
+                    归档
+                </a>
+                
+            </div>
+            
+            <div class="nav-item">
+                
+                <a href="/tags" class="menu gt-a-link">
+                    标签
+                </a>
+                
+            </div>
+            
+            <div class="nav-item">
+                
+                <a href="/post/about" class="menu gt-a-link">
+                    关于
+                </a>
+                
+            </div>
+            
+        </div>
+        <div style="text-align: center">
+            <form id="gridea-search-form" style="position: relative" data-update="1721984284030"
+                action="/search/">
+                <input class="search-input" autocomplete="off" spellcheck="false" name="q" placeholder="搜索文章" />
+                <i class="fas fa-search gt-c-content-color-first" style="position: absolute; top: 9px; left: 10px;"></i>
+            </form>
+        </div>
+    </div>
+</nav>
+<script>
+    /* 移动端导航栏展开/收起切换 */
+    document.getElementById('changeNavbar').onclick = () => {
+        var element = document.getElementById('navbarSupportedContent');
+        if (element.style.display === 'none' || element.style.display === '') {
+            element.style.display = 'block';
+        } else {
+            element.style.display = 'none';
+        }
+    }
+</script>
+
+    <div class="post-container">
+        <div class="post-detail gt-bg-theme-color-second">
+            <article class="gt-post-content">
+                <h2 class="post-title">
+                    vmware 双机联调 不能下端点 debug 问题
+                </h2>
+                <div class="post-info">
+                    <time class="post-time gt-c-content-color-first">
+                        · 2024-01-19 ·
+                    </time>
+                    
+                        <a href="https://blog.augustu.top/tag/eebvwWSSW/" class="post-tags">
+                            # 技术
+                        </a>
+                    
+                        <a href="https://blog.augustu.top/tag/nvjcETb7ou/" class="post-tags">
+                            # IOT
+                        </a>
+                    
+                </div>
+                <div class="post-content">
+                    <p>在复现CVE-2022-42475 FortiGate 防火墙 漏洞时遇到了一个问题</p>
+<p>跟着<a href="https://forum.butian.net/share/2166">CVE-2022-42475 FortiGate SSLVPN 堆溢出漏洞分析与利用</a>和<a href="https://i3r0nya.cn/wiki/note/reverse/cve-2022-42475/">CVE-2022-42475 复现研究</a>、<a href="https://wzt.ac.cn/2022/12/15/CVE-2022-42475/">CVE-2022-42475</a>做了前面的环境准备和提取二进制等工作后在通过patch绕过文件系统校验这一步卡住了</p>
+<h2 id="具体情况">具体情况</h2>
+<p>使用vmlinux-to-elf将flatkc文件转换为elf文件后，使用gdb加载，再target remote进行远程连接后在call fgt_verify处下断点，但只要开始c那么FortiGate虚拟机就会直接关闭</p>
+<figure data-type="image" tabindex="1"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240119151002626.png?x-oss-process=style/zip" alt="image-20240119151002626" loading="lazy"></figure>
+<p>这个问题困扰了我们很长时间，刚刚算了一下，到现在快两个月了，终于找到了解决方法</p>
+<h2 id="解决方法">解决方法</h2>
+<p>关闭hyper-v和Device Guard</p>
+<ul>
+<li>
+<p>禁用Device Guard或Credential Guard</p>
+<ol>
+<li>在主机操作系统上，右键单击“<strong>开始”</strong> &gt; <strong>“运行”</strong>，键入gpedit.msc，然后单击“ **确定”。**本地组策略编辑器打开。</li>
+<li>转至<strong>本地计算机策略</strong> &gt; <strong>计算机配置</strong> &gt; <strong>管理模板&gt;系统</strong> &gt;<strong>Device Guard（或者是： 设备防护）</strong> &gt; <strong>启用基于虚拟化的安全性</strong>。</li>
+<li>选择<strong>已禁用</strong>。</li>
+</ol>
+<figure data-type="image" tabindex="2"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240119150736191.png?x-oss-process=style/zip" alt="image-20240119150736191" loading="lazy"></figure>
+</li>
+<li>
+<p><strong>以管理员身份运行Windows Powershell (管理员)（Windows键+X）</strong></p>
+<p>​    运行下面命令并重启电脑：</p>
+<pre><code class="language-cobol">bcdedit /set hypervisorlaunchtype off
+</code></pre>
+</li>
+</ul>
+<p>这时候再进行尝试的话，一句话，怎么调怎么有</p>
+<figure data-type="image" tabindex="3"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240119143653223.png?x-oss-process=style/zip" alt="image-20240119143653223" loading="lazy"></figure>
+<figure data-type="image" tabindex="4"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240119144850038.png?x-oss-process=style/zip" alt="image-20240119144850038" loading="lazy"></figure>
+<h2 id="原因探究">原因探究</h2>
+<p>我查看了Microsoft的官方文档介绍，这个也就是他说的<code>内存完整性</code>的另一个名字，对于这个内存完整性，文档介绍是</p>
+<blockquote>
+<p><strong>内存完整性</strong> 是 Windows 中提供的基于虚拟化的安全 (VBS) 功能。 内存完整性和 VBS 改进了 Windows 的威胁模型，并针对试图利用 Windows 内核的恶意软件提供更强大的保护。 VBS 使用 Windows 虚拟机监控程序创建独立的虚拟环境，该环境成为假定内核可能遭到入侵的 OS 的信任根。 内存完整性是一个关键组件，它通过在 VBS 的独立虚拟环境中运行内核模式代码完整性来保护和强化 Windows。 内存完整性还限制可用于破坏系统的内核内存分配。</p>
+</blockquote>
+<blockquote>
+<h2 id="内存完整性功能">内存完整性功能</h2>
+<ul>
+<li>保护内核模式驱动程序的控制流防护 (CFG) 位图的修改。</li>
+<li>保护内核模式代码完整性进程，确保其他受信任的内核进程具有有效的证书。</li>
+</ul>
+</blockquote>
+<p>第一个功能，我找了几篇介绍CFG的文章看了一下，感觉是为了防止对内核模式驱动程序的控制流进行恶意修改。如果我尝试在虚拟机内通过修改控制流来影响内核模式驱动程序，内存完整性功能可能会检测到这样的修改，然后结束这个进程，造成我虚拟机直接退出的情况，我觉得是很有可能的</p>
+<p>第二个功能我不太了解进程证书的情况，不知道会不会产生什么影响</p>
+<p>但总的来说，在一个虚拟机里用GDB连接到另一个虚拟机，而且还在它启动的时候改内存，感觉触发内存完整性功能的检测还是挺有可能的，因为这涉及对内核模式代码的操作，尤其是对控制流的修改，也刚好能解释为什么不下断点能够正常运行，因为并没有修改控制流</p>
+<p>然后我尝试了再次开启hyper-v，在内存完整性关闭的情况下，仍然会同样断开</p>
+<p>Hyper-V 利用硬件虚拟化技术（如Intel VT-x或AMD-V）来提高虚拟机性能，并支持在虚拟机中运行受保护的内核模式代码。虚拟化本身引入了一些额外的层次，可能会影响对内存和控制流的访问，之前VMware官方人员要求关闭也不是没有理由的。</p>
+<h2 id="辛酸历程">辛酸历程</h2>
+<p>简单回顾一下这段时间的辛酸历程，我都不太相信我能成功了</p>
+<p>最后都想买个失败总是贯穿人生始终放桌子上了，终于，还是没有被贯穿到底</p>
+
+                </div>
+            </article>
+        </div>
+
+        
+            <div class="next-post">
+                <div class="next gt-c-content-color-first">下一篇</div>
+                <a href="https://blog.augustu.top/post/shun1730-review/" class="post-title gt-a-link">
+                    《新顺1730》简评
+                </a>
+            </div>
+        
+
+        
+
+        
+
+        
+
+        <div class="site-footer gt-c-content-color-first">
+    <div class="slogan gt-c-content-color-first">吾不识青天高，黄地厚<br> 
+唯见月寒日暖，来煎人寿</div>
+    <div class="social-container">
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+    </div>
+    <div class="footer-info">
+        Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+    </div>
+    <div>
+        Theme <a href="https://github.com/imhanjie/gridea-theme-pure" target="_blank">Pure</a>, Powered by <a
+                href="https://gridea.dev" target="_blank">Gridea</a> | <a href="https://blog.augustu.top/atom.xml" target="_blank">RSS</a>
+    </div>
+</div>
+
+<script>
+  hljs.highlightAll()
+</script>
+
+    </div>
+</div>
+</body>
+</html>

